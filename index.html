@@ -1,282 +1,845 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Dashboard Resseguro SUSEP — Local vs Estrangeira v3</title>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resseguro · Análise IRB vs Allianz · v10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box}body{margin:0;background:#eef2f7;font-family:Arial,Helvetica,sans-serif}.wrap{max-width:1240px;margin:0 auto;padding:18px}.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin:14px 0}.kpi{background:#fff;border-radius:10px;padding:12px 14px;box-shadow:0 1px 4px rgba(0,0,0,.08);cursor:pointer;border:2px solid transparent}.kpi:hover{box-shadow:0 3px 10px rgba(0,0,0,.15)}.kpi.active{border-color:#1f4e78}.kpi .nm{font-size:13px;color:#1f4e78;font-weight:bold}.kpi .tp{font-size:10px;color:#999}.kpi .big{font-size:22px;font-weight:bold;margin-top:6px}.kpi .sub{font-size:11px;color:#666}.panel{background:#fff;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin:14px 0}h2{color:#1f4e78;margin:6px 0}h3{color:#1f4e78;margin:4px 0 8px 0}.bar-row{display:flex;align-items:center;gap:8px;margin:3px 0;font-size:12.5px}.bar-lbl{width:150px;text-align:right;color:#333;flex-shrink:0}.bar-track{flex:1;background:#f0f0f0;border-radius:3px;height:20px;display:flex}.seg{height:20px}.bar-val{width:200px;font-size:12px;flex-shrink:0}table{border-collapse:collapse;width:100%;font-size:12.5px}th{background:#1f4e78;color:#fff;padding:6px 8px;cursor:pointer;user-select:none}th:hover{background:#2a5f92}td{border:1px solid #e0e0e0;padding:4px 8px}.toolbar button{font:13px Arial;padding:8px 14px;border:none;border-radius:5px;cursor:pointer;margin-right:8px;margin-bottom:4px}.legend{font-size:11px;color:#555;margin:4px 0}.lg{display:inline-block;width:11px;height:11px;border-radius:2px;margin:0 4px -1px 10px}.tgl{padding:5px 14px;border:2px solid #1f4e78;border-radius:20px;cursor:pointer;font:12px Arial;background:#fff;color:#1f4e78}.tgl.on{background:#1f4e78;color:#fff}.chdr{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px}.pct-track{flex:1;height:22px;display:flex;border-radius:3px;overflow:hidden}.pct-val{width:220px;font-size:12px;flex-shrink:0}
-</style></head><body><div class="wrap">
-<h2>Dashboard — Resseguro YoY (2025 vs 2024) · Local vs Estrangeira por segmento</h2>
-<div style="font-size:12px;color:#555;margin-bottom:6px">Consolidado por grupo econômico. Métrica líquida de comissão. Fonte: SUSEP/SES. Clique num card para focar; clique nos cabeçalhos para ordenar.</div>
-<div class="toolbar" style="margin:8px 0">
-<button id="copyBtn" style="background:#2e7d32;color:#fff">📋 Copiar TUDO</button>
-<button id="csvBtn" style="background:#555;color:#fff">⬇ CSV</button>
-<button id="allBtn" style="background:#1f4e78;color:#fff">Ver todas</button>
-<button id="splitBtn" style="background:#8e44ad;color:#fff">Alternar: Local vs Estrangeira</button>
-<span id="msg" style="font-size:12px;color:#2e7d32;margin-left:8px"></span></div>
-<div class="legend">Modo atual: <b id="modeLbl">Total consolidado</b> <span id="leg"></span></div>
-<div id="kpis" class="kpis"></div>
-<div id="chartPanel" class="panel"></div>
-<div class="panel">
-<div class="chdr">
-<h3 id="varTitle">📊 Variação do Prêmio 2025 vs 2024 (Δ R$ MM) — por empresa</h3>
-<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;color:#555">Incluir Estrangeira:</span>
-<button class="tgl on" id="varTogBtn">✔ ON</button></div></div>
-<div id="varChart"></div></div>
-<div class="panel">
-<h3>🥧 % Local vs Estrangeira por empresa — Prêmio 2025</h3>
-<div style="font-size:11px;color:#777;margin-bottom:8px">
-<span style="display:inline-block;width:12px;height:12px;background:#2c6fbb;border-radius:2px;vertical-align:middle"></span> Local 
-<span style="display:inline-block;width:12px;height:12px;background:#e8883a;border-radius:2px;vertical-align:middle;margin-left:12px"></span> Estrangeira</div>
-<div id="pctChart"></div></div>
-<div id="tablePanel"></div></div>
+:root {
+  --bg: #0a0e1a;
+  --bg-card: #131829;
+  --bg-card-hover: #1a2138;
+  --bg-elevated: #1f2942;
+  --border: rgba(148, 163, 184, 0.08);
+  --border-strong: rgba(148, 163, 184, 0.18);
+  --text: #f3f4f6;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --accent-irb: #34d399;
+  --accent-irb-glow: rgba(52, 211, 153, 0.12);
+  --accent-allianz: #fbbf24;
+  --accent-allianz-glow: rgba(251, 191, 36, 0.12);
+  --accent-blue: #60a5fa;
+  --accent-blue-glow: rgba(96, 165, 250, 0.12);
+  --accent-purple: #a78bfa;
+  --local: #60a5fa;
+  --estr: #fb923c;
+  --pos: #22c55e;
+  --neg: #ef4444;
+  --neutral: #94a3b8;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+.app { max-width: 1440px; margin: 0 auto; padding: 24px; }
+/* Header */
+.header {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  margin-bottom: 24px; padding: 16px 20px;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+  position: sticky; top: 16px; z-index: 100;
+  backdrop-filter: blur(20px); flex-wrap: wrap;
+}
+.header-left { display: flex; flex-direction: column; gap: 4px; }
+.header-time { font-size: 22px; font-weight: 300; color: var(--text); letter-spacing: -0.5px; }
+.header-subtitle { font-size: 12px; color: var(--text-muted); font-weight: 400; }
+.header-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+.pill {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px;
+  background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 100px;
+  font-size: 11px; color: var(--text-muted); font-weight: 500;
+}
+.pill-dot { width: 6px; height: 6px; border-radius: 50%; }
+.pill .pill-dot.green { background: var(--accent-irb); box-shadow: 0 0 6px var(--accent-irb); }
+.pill .pill-dot.amber { background: var(--accent-allianz); box-shadow: 0 0 6px var(--accent-allianz); }
+.pill .pill-dot.blue { background: var(--accent-blue); box-shadow: 0 0 6px var(--accent-blue); }
+.pill-val { color: var(--text); font-weight: 600; }
+.metric-toggle {
+  display: inline-flex; background: rgba(15, 23, 42, 0.8);
+  border: 1px solid var(--border-strong); border-radius: 100px; padding: 3px;
+}
+.metric-toggle button {
+  border: none; background: transparent; color: var(--text-muted);
+  padding: 7px 14px; font-size: 12px; font-weight: 500; border-radius: 100px;
+  cursor: pointer; transition: all 0.2s; font-family: inherit;
+}
+.metric-toggle button.active {
+  background: linear-gradient(135deg, #3b82f6, #2563eb); color: white;
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.3);
+}
+.section-label {
+  font-size: 10px; font-weight: 600; letter-spacing: 1.5px;
+  color: var(--text-dim); text-transform: uppercase;
+  margin: 28px 0 10px 4px;
+}
+/* Hero stats */
+.hero-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 8px;
+}
+.stat-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 18px; position: relative; overflow: hidden;
+}
+.stat-card.glow-irb { background: radial-gradient(circle at top right, var(--accent-irb-glow) 0%, var(--bg-card) 50%); border-color: rgba(52, 211, 153, 0.2); }
+.stat-card.glow-allianz { background: radial-gradient(circle at top right, var(--accent-allianz-glow) 0%, var(--bg-card) 50%); border-color: rgba(251, 191, 36, 0.2); }
+.stat-card.glow-blue { background: radial-gradient(circle at top right, var(--accent-blue-glow) 0%, var(--bg-card) 50%); border-color: rgba(96, 165, 250, 0.2); }
+.stat-card.glow-purple { background: radial-gradient(circle at top right, rgba(167, 139, 250, 0.10) 0%, var(--bg-card) 50%); border-color: rgba(167, 139, 250, 0.20); }
+.stat-label { font-size: 10px; letter-spacing: 1.2px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; font-weight: 500; }
+.stat-val { font-size: 28px; font-weight: 600; line-height: 1.1; letter-spacing: -1px; margin-bottom: 4px; }
+.stat-val.irb { color: var(--accent-irb); } .stat-val.allianz { color: var(--accent-allianz); }
+.stat-val.blue { color: var(--accent-blue); } .stat-val.purple { color: var(--accent-purple); }
+.stat-sub { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+/* Ranking comparison */
+.ranking-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.rank-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+.rank-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.rank-title { font-size: 13px; font-weight: 600; color: var(--text); }
+.rank-source { font-size: 10px; color: var(--text-dim); font-weight: 500; padding: 3px 8px; background: rgba(15, 23, 42, 0.6); border-radius: 100px; border: 1px solid var(--border); }
+.rank-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.rank-table thead th { text-align: left; padding: 10px 14px; font-weight: 500; color: var(--text-dim); font-size: 10px; letter-spacing: 0.5px; text-transform: uppercase; border-bottom: 1px solid var(--border); background: rgba(15, 23, 42, 0.4); }
+.rank-table thead th.right { text-align: right; }
+.rank-table tbody td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.rank-table tbody td.right { text-align: right; }
+.rank-table tbody tr:last-child td { border-bottom: none; }
+.rank-table tbody tr.irb-row td { background: rgba(52, 211, 153, 0.06); }
+.rank-table tbody tr.alz-row td { background: rgba(251, 191, 36, 0.06); }
+.rank-table tbody tr.irb-row td.name-cell { color: var(--accent-irb); font-weight: 600; }
+.rank-table tbody tr.alz-row td.name-cell { color: var(--accent-allianz); font-weight: 600; }
+.rank-num { color: var(--text-dim); font-weight: 500; width: 30px; }
+.rank-tipo { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 500; letter-spacing: 0.3px; }
+.tipo-local { background: rgba(96, 165, 250, 0.14); color: #60a5fa; }
+.tipo-admitida { background: rgba(20, 184, 166, 0.14); color: #14b8a6; }
+.tipo-eventual { background: rgba(217, 70, 239, 0.14); color: #d946ef; }
+.tipo-grupo { background: rgba(148, 163, 184, 0.14); color: var(--text-muted); }
+.delta-pos { color: var(--pos); font-weight: 500; } .delta-neg { color: var(--neg); font-weight: 500; }
+.delta-neutral { color: var(--text-dim); }
+/* Method explanation */
+.method-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+.method-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.method-title::before { content: ""; width: 4px; height: 14px; background: var(--accent-blue); border-radius: 2px; }
+.method-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.method-item { padding: 12px 14px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 10px; font-size: 12px; line-height: 1.6; color: var(--text-muted); }
+.method-item strong { color: var(--text); font-weight: 600; }
+.method-item .badge { display: inline-block; padding: 1px 7px; border-radius: 4px; font-size: 10px; font-weight: 600; letter-spacing: 0.3px; margin-right: 4px; }
+.badge-irb { background: rgba(52, 211, 153, 0.2); color: var(--accent-irb); }
+.badge-alz { background: rgba(251, 191, 36, 0.2); color: var(--accent-allianz); }
+.badge-other { background: rgba(167, 139, 250, 0.2); color: var(--accent-purple); }
+/* Allianz structure */
+.allianz-struct { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 22px; }
+.struct-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+.struct-tier { padding: 16px; border-radius: 12px; border: 1px solid var(--border); position: relative; overflow: hidden; }
+.struct-tier.t-local { background: radial-gradient(circle at top right, rgba(20, 184, 166, 0.10), rgba(20, 184, 166, 0.02)); border-color: rgba(20, 184, 166, 0.25); }
+.struct-tier.t-admit { background: radial-gradient(circle at top right, rgba(100, 116, 139, 0.10), rgba(100, 116, 139, 0.02)); border-color: rgba(100, 116, 139, 0.25); }
+.struct-tier.t-event { background: radial-gradient(circle at top right, rgba(217, 70, 239, 0.10), rgba(217, 70, 239, 0.02)); border-color: rgba(217, 70, 239, 0.25); }
+.struct-label { font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; font-weight: 600; margin-bottom: 6px; }
+.struct-label.t-local { color: #14b8a6; } .struct-label.t-admit { color: #94a3b8; } .struct-label.t-event { color: #d946ef; }
+.struct-codes { font-size: 11px; color: var(--text-dim); margin-bottom: 10px; }
+.struct-val { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
+.struct-pct { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.event-detail { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.event-card { padding: 14px; background: rgba(217, 70, 239, 0.04); border: 1px solid rgba(217, 70, 239, 0.15); border-radius: 10px; }
+.event-card-title { font-size: 12px; color: var(--text); font-weight: 600; margin-bottom: 4px; }
+.event-card-val { font-size: 18px; font-weight: 600; color: var(--accent-purple); margin-bottom: 6px; }
+.event-card-detail { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+.thesis-callout { margin-top: 18px; padding: 16px 18px; border-radius: 12px; background: radial-gradient(circle at left, rgba(251, 191, 36, 0.08), rgba(251, 191, 36, 0.02)); border: 1px solid rgba(251, 191, 36, 0.25); }
+.thesis-callout-title { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; color: var(--accent-allianz); margin-bottom: 6px; }
+.thesis-callout-text { font-size: 12px; color: var(--text); line-height: 1.6; }
+/* ==== DASHBOARD RAMO-A-RAMO (v8 visualizations adapted) ==== */
+.dash-toolbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 14px 16px; background: var(--bg-card);
+  border: 1px solid var(--border); border-radius: 14px;
+  margin-bottom: 12px;
+}
+.tbtn {
+  border: 1px solid var(--border-strong); background: rgba(15, 23, 42, 0.6);
+  color: var(--text-muted); padding: 6px 12px; font-size: 12px;
+  border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 500;
+  transition: all 0.15s;
+}
+.tbtn:hover { background: var(--bg-card-hover); color: var(--text); border-color: var(--border-strong); }
+.tbtn.primary { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; border-color: transparent; }
+.tbtn.success { background: linear-gradient(135deg, #16a34a, #15803d); color: white; border-color: transparent; }
+.tbtn.purple { background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; border-color: transparent; }
+.tbtn.neutral { background: linear-gradient(135deg, #475569, #334155); color: white; border-color: transparent; }
+.tgl { padding: 5px 10px; border: 1px solid var(--border-strong); background: rgba(15, 23, 42, 0.6); color: var(--text-muted); border-radius: 6px; cursor: pointer; font-size: 11px; font-family: inherit; font-weight: 500; }
+.tgl.on { background: linear-gradient(135deg, #16a34a, #15803d); color: white; border-color: transparent; }
+.dash-msg { font-size: 12px; color: var(--accent-irb); margin-left: 8px; }
+.dash-mode { font-size: 11px; color: var(--text-muted); padding: 6px 10px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 8px; margin-left: auto; }
+.dash-mode b { color: var(--text); font-weight: 600; }
+.lg { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin: 0 4px 0 8px; vertical-align: middle; }
+.kpis {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px; margin-bottom: 14px;
+}
+.kpi {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 12px 14px; cursor: pointer; transition: all 0.15s;
+}
+.kpi:hover { border-color: var(--border-strong); background: var(--bg-card-hover); transform: translateY(-1px); }
+.kpi.active { border-color: var(--accent-blue); box-shadow: 0 0 0 1px var(--accent-blue), 0 0 20px rgba(96, 165, 250, 0.2); background: var(--bg-card-hover); }
+.kpi .nm { font-size: 13px; font-weight: 600; color: var(--text); }
+.kpi .tp { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; font-weight: 500; }
+.kpi .big { font-size: 19px; font-weight: 600; margin-top: 8px; letter-spacing: -0.3px; }
+.kpi .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+.kpi .sub b { color: var(--text); font-weight: 600; }
+.panel {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 18px; margin-bottom: 12px;
+}
+.panel h3 { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.chdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+.chdr h3 { margin-bottom: 0; }
+.bar-row { display: flex; align-items: center; gap: 10px; margin: 4px 0; font-size: 12px; }
+.bar-lbl { width: 140px; min-width: 140px; color: var(--text); font-weight: 500; font-size: 12px; }
+.bar-track { flex: 1; height: 22px; background: rgba(15, 23, 42, 0.4); border-radius: 4px; overflow: hidden; display: flex; }
+.bar-track .seg { height: 100%; transition: width 0.3s; }
+.bar-val { width: 130px; min-width: 130px; text-align: right; font-variant-numeric: tabular-nums; font-size: 11px; color: var(--text-muted); }
+.pct-track { flex: 1; display: flex; height: 24px; background: rgba(15, 23, 42, 0.4); border-radius: 4px; overflow: hidden; }
+.pct-val { width: 220px; min-width: 220px; text-align: right; font-size: 11px; color: var(--text-muted); }
+.dtable-wrap { overflow-x: auto; }
+.dtable { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.dtable thead th { padding: 8px 10px; text-align: right; font-size: 10px; font-weight: 500; color: var(--text-dim); letter-spacing: 0.4px; text-transform: uppercase; border-bottom: 1px solid var(--border); background: rgba(15, 23, 42, 0.5); cursor: pointer; user-select: none; white-space: nowrap; }
+.dtable thead th:first-child { text-align: left; }
+.dtable thead th:hover { background: rgba(15, 23, 42, 0.8); color: var(--text); }
+.dtable tbody td { padding: 6px 10px; text-align: right; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; color: var(--text); }
+.dtable tbody td:first-child { text-align: left; color: var(--text-muted); }
+.dtable tbody tr.tot td { background: rgba(15, 23, 42, 0.6); font-weight: 600; border-top: 1px solid var(--border-strong); color: var(--text); }
+.dtable tbody tr.odd td { background: rgba(15, 23, 42, 0.25); }
+.disclaimer { margin-top: 12px; padding: 14px 18px; background: rgba(15, 23, 42, 0.4); border: 1px dashed var(--border-strong); border-radius: 10px; font-size: 11px; line-height: 1.6; color: var(--text-muted); }
+.disclaimer strong { color: var(--text); }
+@media (max-width: 900px) {
+  .hero-stats { grid-template-columns: 1fr 1fr; }
+  .ranking-row { grid-template-columns: 1fr; }
+  .method-grid { grid-template-columns: 1fr; }
+  .struct-row { grid-template-columns: 1fr; }
+  .event-detail { grid-template-columns: 1fr; }
+  .bar-lbl { width: 100px; min-width: 100px; }
+  .bar-val { width: 100px; min-width: 100px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="header-time">Resseguro BR · IRB vs Allianz 2025</div>
+      <div class="header-subtitle" id="header-date"></div>
+    </div>
+    <div class="header-pills">
+      <span class="pill"><span class="pill-dot green"></span>IRB <span class="pill-val" id="pill-irb">—</span></span>
+      <span class="pill"><span class="pill-dot amber"></span>Allianz <span class="pill-val" id="pill-alz">—</span></span>
+      <span class="pill"><span class="pill-dot blue"></span>Gap <span class="pill-val" id="pill-gap">—</span></span>
+    </div>
+    <div class="metric-toggle">
+      <button id="btn-revision" onclick="setSource('revision')" class="active">Revision Research</button>
+      <button id="btn-susep" onclick="setSource('susep')">SUSEP-direct</button>
+    </div>
+    <div class="metric-toggle" id="metric-toggle-wrap" style="display:none">
+      <button id="btn-ganho" onclick="setMetric('ganho')">Prêmios Ganhos</button>
+      <button id="btn-emitido" onclick="setMetric('emitido')">Prêmios Emitidos</button>
+    </div>
+  </div>
+  <!-- HERO -->
+  <div class="section-label">Resumo executivo · Ranking 2025</div>
+  <div class="hero-stats">
+    <div class="stat-card glow-allianz">
+      <div class="stat-label">1º Lugar 2025</div>
+      <div class="stat-val allianz" id="kpi-1st-name">Allianz</div>
+      <div class="stat-sub" id="kpi-1st-detail">R$ 4.746 MM · +59,0% YoY · 13,1% mkt share</div>
+    </div>
+    <div class="stat-card glow-irb">
+      <div class="stat-label">2º Lugar 2025</div>
+      <div class="stat-val irb" id="kpi-2nd-name">IRB</div>
+      <div class="stat-sub" id="kpi-2nd-detail">R$ 4.287 MM · −19,4% YoY · 11,8% mkt share</div>
+    </div>
+    <div class="stat-card glow-purple">
+      <div class="stat-label">Allianz Auto via Allianz SE</div>
+      <div class="stat-val purple">97,9%</div>
+      <div class="stat-sub">Cód. 58050 · Eventual · cessão estrangeira matriz alemã. IRB em Auto: R$ 70 MM (residual).</div>
+    </div>
+    <div class="stat-card glow-blue">
+      <div class="stat-label">IRB ex-Auto vs Allianz ex-Auto</div>
+      <div class="stat-val blue" id="kpi-ex-auto">3,6x</div>
+      <div class="stat-sub" id="kpi-ex-auto-detail">IRB R$ 4.812 MM vs Allianz R$ 1.353 MM. Sem o ramo Auto, IRB segue líder.</div>
+    </div>
+  </div>
+  <!-- RANKINGS -->
+  <div class="section-label">Ranking 2025 · Comparativo de fontes</div>
+  <div class="ranking-row">
+    <div class="rank-card">
+      <div class="rank-header"><div class="rank-title">Revision Research · Emitido bruto de comissão</div><div class="rank-source">Referência de mercado</div></div>
+      <table class="rank-table">
+        <thead><tr><th>#</th><th>Empresa</th><th>Tipo</th><th class="right">Prêmio (MM)</th><th class="right">Var % 2024</th><th class="right">MS</th></tr></thead>
+        <tbody id="rank-revision-tbody"></tbody>
+      </table>
+    </div>
+    <div class="rank-card">
+      <div class="rank-header"><div class="rank-title">SUSEP-direct · <span id="rank-susep-label">Emitido reconstruído</span></div><div class="rank-source">Dashboard interno</div></div>
+      <table class="rank-table">
+        <thead><tr><th>#</th><th>Empresa</th><th>Tipo</th><th class="right">2025 (MM)</th><th class="right">Var % 2024</th><th class="right">Ex-Auto (MM)</th></tr></thead>
+        <tbody id="rank-susep-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+  <!-- METHODOLOGY -->
+  <div class="section-label">Diferenças metodológicas</div>
+  <div class="method-card">
+    <div class="method-title">Por que Revision difere do SUSEP-direct</div>
+    <div class="method-grid">
+      <div class="method-item"><span class="badge badge-irb">IRB</span> Revision <strong>R$ 4.287 MM</strong> vs SUSEP-direct <strong>R$ 4.889 MM</strong> (Δ −602 MM, −12%). Hipótese: Revision exclui Aceitações do Exterior (cód. 20, ~R$ 830 MM) — métrica "mercado segurador BR" estrita.</div>
+      <div class="method-item"><span class="badge badge-alz">Allianz</span> Revision <strong>R$ 4.746 MM</strong> vs SUSEP-direct <strong>R$ 4.474 MM</strong> (Δ +272 MM, +6%). Provável: snapshot mais recente do SES ou cessionárias adicionais.</div>
+      <div class="method-item"><span class="badge badge-other">Talanx</span> Revision <strong>R$ 1.287 MM</strong> vs SUSEP-direct <strong>R$ 144 MM</strong>. Revision agrega <strong>grupo Talanx</strong> (Talanx AG, HDI Global SE, Hannover Rück SE); dashboard tem apenas uma entidade.</div>
+      <div class="method-item"><span class="badge badge-other">Cobertura</span> Revision inclui Scor, AIG, Axa XL, Junto, Starr, Mitsui (~R$ 4,4 bi adicionais). Dashboard cobre 11 maiores cessionárias com perna local + estrangeira.</div>
+    </div>
+    <div class="disclaimer" style="margin-top:14px"><strong>Conclusão prática.</strong> Para narrativa de market share: Revision. Para análise forense ramo-a-ramo: dashboard SUSEP-direct. Ambos confirmam: <strong>Allianz #1 em 2025 por Auto via Allianz SE matriz (Eventual)</strong>, ramo onde o IRB não compete.</div>
+  </div>
+  <!-- ALLIANZ STRUCTURE -->
+  <div class="section-label">Estrutura Allianz · 2024 (validado SUSEP)</div>
+  <div class="allianz-struct">
+    <div class="struct-row">
+      <div class="struct-tier t-local"><div class="struct-label t-local">Local</div><div class="struct-codes">1 entidade · 30074</div><div class="struct-val">R$ 1.727 MM</div><div class="struct-pct">54,3% do grupo</div></div>
+      <div class="struct-tier t-admit"><div class="struct-label t-admit">Admitida</div><div class="struct-codes">1 entidade · 40207</div><div class="struct-val">R$ 11 MM</div><div class="struct-pct">0,3% do grupo</div></div>
+      <div class="struct-tier t-event"><div class="struct-label t-event">Eventual</div><div class="struct-codes">2 entidades · 50822 + 58050</div><div class="struct-val">R$ 1.440 MM</div><div class="struct-pct">45,3% do grupo</div></div>
+    </div>
+    <div class="event-detail">
+      <div class="event-card"><div class="event-card-title">AGCS SE · cód. 50822</div><div class="event-card-val">R$ 310 MM</div><div class="event-card-detail">Patrimonial 49% · Marítimos 13% · Aero 11% · Petróleo 12% · Trans 7%. Carteira corporate/industrial.</div></div>
+      <div class="event-card"><div class="event-card-title">Allianz SE matriz · cód. 58050</div><div class="event-card-val">R$ 1.130 MM</div><div class="event-card-detail"><strong style="color:var(--accent-allianz)">Automóvel 97,9%</strong> · Rural, PC, PI residuais. Engrenagem do crescimento Auto da Allianz.</div></div>
+    </div>
+    <div class="thesis-callout">
+      <div class="thesis-callout-title">Implicação para tese IRB</div>
+      <div class="thesis-callout-text">Allianz SE matriz (Eventual) dirige praticamente todo o crescimento Auto: <strong style="color:var(--accent-allianz)">R$ 1.106 → R$ 2.009 MM (+82%) em 2025</strong>. IRB Auto: R$ 53 MM (2024) → R$ 70 MM (2025), ramo onde o IRB não opera. A perda do 1º lugar reflete crescimento em segmento onde o IRB não compete.</div>
+    </div>
+  </div>
+  <!-- ============ DASHBOARD RAMO-A-RAMO (SUSEP-direct) ============ -->
+  <div class="section-label">Dashboard ramo-a-ramo · Local vs Estrangeira (SUSEP-direct)</div>
+  
+  <div class="dash-toolbar">
+    <button id="copyBtn" class="tbtn success">📋 Copiar tudo</button>
+    <button id="csvBtn" class="tbtn neutral">⬇ CSV</button>
+    <button id="allBtn" class="tbtn primary">Ver todas</button>
+    <button id="splitBtn" class="tbtn purple">Alternar: Local vs Estrangeira</button>
+    <span id="msg" class="dash-msg"></span>
+    <span class="dash-mode">Modo: <b id="modeLbl">Total consolidado</b><span id="leg"></span></span>
+  </div>
+  <div id="kpis" class="kpis"></div>
+  <div class="panel" id="chartPanel-wrap"><div id="chartPanel"></div></div>
+  <div class="panel">
+    <div class="chdr">
+      <h3 id="varTitle">📊 Variação do Prêmio 2025 vs 2024 (Δ R$ MM) — por empresa</h3>
+      <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;color:var(--text-muted)">Incluir Estrangeira:</span><button class="tgl on" id="varTogBtn">✔ ON</button></div>
+    </div>
+    <div id="varChart"></div>
+  </div>
+  <div class="panel">
+    <h3>🥧 % Local vs Estrangeira por empresa — Prêmio 2025</h3>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px"><span class="lg" style="background:var(--local)"></span>Local <span class="lg" style="background:var(--estr)"></span>Estrangeira</div>
+    <div id="pctChart"></div>
+  </div>
+  <div id="tablePanel"></div>
+  <div class="disclaimer" style="margin-top:18px;text-align:center">
+    Fonte: SUSEP/SES · Revision Research (Ranking 2025). Validação: soma das 3 cessionárias estrangeiras Allianz em 2024 (R$ 1.450,95 MM) bate com dashboard (R$ 1.450,91 MM, diff 0,003%).
+  </div>
+</div>
 <script>
-var D={consol:{"Allianz":{"Patrimonial":[494339037,616869678],"Riscos Especiais":[18893456,23096121],"Responsabilidades":[140369992,122787735],"Automóvel":[1702594097,2888857431],"Transportes":[127467390,213181539],"Riscos Financeiros":[178525102,172965232],"Pessoas Coletivo":[18601542,20294254],"Rural":[79099073,89125340],"Pessoas Individual":[15334384,22458698],"Marítimos":[46964027,37137495],"Aeronáuticos":[37284625,69273824],"Habitacional":[0,316065],"Petróleo":[40150604,39978942]},"Mapfre":{"Patrimonial":[1502478837,1668187359],"Responsabilidades":[52210755,40272236],"Automóvel":[11983693,10927209],"Transportes":[46805398,52349577],"Riscos Financeiros":[36357959,44566297],"Pessoas Coletivo":[67110524,55757256],"Habitacional":[20474123,22322843],"Rural":[678629964,432990873],"Pessoas Individual":[69397370,109023087],"Marítimos":[49068610,48009773],"Aeronáuticos":[303110926,315570848],"Petróleo":[95289693,127581800],"Riscos Especiais":[4871389,0]},"Munich":{"Patrimonial":[607664656,568914089],"Responsabilidades":[57007836,60968304],"Automóvel":[71524083,513719814],"Transportes":[201221139,209888622],"Riscos Financeiros":[19830181,18995572],"Pessoas Coletivo":[378380924,439945548],"Rural":[46086629,115017385],"Marítimos":[14918580,15477219],"Aeronáuticos":[26115537,24658833],"Riscos Especiais":[0,0],"Habitacional":[0,0],"Pessoas Individual":[282074532,368044833],"Petróleo":[0,0]},"Swiss":{"Patrimonial":[775123974,935874024],"Riscos Especiais":[6774474,520518],"Responsabilidades":[40650525,42170101],"Automóvel":[48167891,-7894270],"Transportes":[161854319,125810297],"Riscos Financeiros":[69238933,84896483],"Pessoas Coletivo":[313544448,291789924],"Habitacional":[3398391,2927977],"Rural":[99411157,171056016],"Marítimos":[14204789,19418402],"Aeronáuticos":[50604302,75025427],"Petróleo":[10430101,1563789],"Saúde":[118522594,275222819],"Pessoas Individual":[5812968,15747484]},"Austral":{"Patrimonial":[736825549,653424418],"Riscos Especiais":[-3597,5205],"Responsabilidades":[162281299,136028472],"Automóvel":[348702734,359625396],"Transportes":[257440876,170543962],"Riscos Financeiros":[84666129,115006535],"Pessoas Coletivo":[134747724,308637592],"Habitacional":[13896740,16048443],"Rural":[5778011,3808767],"Outros":[1194576,-805437],"Pessoas Individual":[25065796,18071533],"Marítimos":[15112679,24770082],"Aeronáuticos":[106973350,106861979],"Petróleo":[50155201,52637061],"Saúde":[13,-33658],"Aceitações do Exterior":[449988408,481609167]},"Chubb":{"Patrimonial":[229699563,380353723],"Responsabilidades":[236407453,290554379],"Transportes":[141743754,184978208],"Riscos Financeiros":[257536702,292340148],"Pessoas Coletivo":[7434585,9372752],"Rural":[6405,2352],"Pessoas Individual":[843540,2147216],"Marítimos":[8298437,4195509],"Petróleo":[3149041,3192143],"Riscos Especiais":[535839,0],"Automóvel":[0,0],"Aeronáuticos":[11203674,11921504]},"Zurich":{"Patrimonial":[514453634,614094969],"Riscos Especiais":[3763786,1467232],"Responsabilidades":[254811463,264363215],"Automóvel":[120008754,77023118],"Transportes":[20900041,30444232],"Riscos Financeiros":[212560865,274281454],"Pessoas Coletivo":[14503646,16470771],"Marítimos":[8172748,15860191],"Crédito":[0,0],"Habitacional":[107488,154778],"Rural":[0,0],"Pessoas Individual":[0,1144],"Aeronáuticos":[0,0],"Petróleo":[14804982,8468927]},"Lloyds":{"Patrimonial":[562099902,813239012],"Riscos Especiais":[47160558,22356114],"Responsabilidades":[183997146,182510154],"Automóvel":[7986584,9561697],"Transportes":[16945450,30799912],"Riscos Financeiros":[331121145,502607767],"Pessoas Coletivo":[4580397,5881791],"Habitacional":[176408,-979],"Rural":[91383419,69021733],"Pessoas Individual":[0,887338],"Marítimos":[23159208,53705113],"Aeronáuticos":[158111146,186209541],"Petróleo":[202168822,197436456]},"Talanx/HDI":{"Patrimonial":[35656046,99121270],"Riscos Especiais":[608380,0],"Responsabilidades":[3878410,7586977],"Automóvel":[0,13644481],"Transportes":[142381,2529431],"Habitacional":[0,1907294],"Rural":[0,18714563],"Marítimos":[0,44098],"Aeronáuticos":[0,-9887],"Petróleo":[3130534,336672]},"Everest":{"Patrimonial":[437151292,406575374],"Riscos Especiais":[22837,-72739],"Responsabilidades":[64308350,51911094],"Automóvel":[26515,2594813],"Transportes":[27290179,25877350],"Riscos Financeiros":[308569358,394174795],"Pessoas Coletivo":[703,1047],"Habitacional":[3130,928465],"Rural":[34748999,46736522],"Pessoas Individual":[0,2],"Marítimos":[4071588,3214702],"Aeronáuticos":[1717536,1709292],"Petróleo":[89039,133926]}},split:{"Allianz":{"Patrimonial":{"local":[339830832,316071014],"estr":[154508205,300798664]},"Riscos Especiais":{"local":[14383496,19418584],"estr":[4509960,3677537]},"Responsabilidades":{"local":[116923802,100480597],"estr":[23446190,22307138]},"Automóvel":{"local":[596716858,880232409],"estr":[1105877239,2008625022]},"Transportes":{"local":[106000474,124261979],"estr":[21466916,88919560]},"Riscos Financeiros":{"local":[178409315,174983536],"estr":[115787,-2018304]},"Pessoas Coletivo":{"local":[13285637,15780395],"estr":[5315905,4513859]},"Rural":{"local":[62874724,66893684],"estr":[16224349,22231656]},"Pessoas Individual":{"local":[13737539,20641781],"estr":[1596845,1816917]},"Marítimos":{"local":[6045054,22321331],"estr":[40918973,14816164]},"Aeronáuticos":{"local":[464630,2027214],"estr":[36819995,67246610]},"Habitacional":{"local":[0,0],"estr":[0,316065]},"Petróleo":{"local":[0,0],"estr":[40150604,39978942]}},"Mapfre":{"Patrimonial":{"local":[906199499,963550097],"estr":[596279338,704637262]},"Responsabilidades":{"local":[28872385,24154431],"estr":[23338370,16117805]},"Automóvel":{"local":[11983693,10927209],"estr":[0,0]},"Transportes":{"local":[45326908,50711046],"estr":[1478490,1638531]},"Riscos Financeiros":{"local":[35587438,44599409],"estr":[770521,-33112]},"Pessoas Coletivo":{"local":[60102204,47363120],"estr":[7008320,8394136]},"Habitacional":{"local":[15483507,16993521],"estr":[4990616,5329322]},"Rural":{"local":[140743058,230433440],"estr":[537886906,202557433]},"Pessoas Individual":{"local":[69301851,109240732],"estr":[95519,-217645]},"Marítimos":{"local":[11119099,15835480],"estr":[37949511,32174293]},"Aeronáuticos":{"local":[113544445,115381156],"estr":[189566481,200189692]},"Petróleo":{"local":[0,4411103],"estr":[95289693,123170697]},"Riscos Especiais":{"local":[0,0],"estr":[4871389,0]}},"Munich":{"Patrimonial":{"local":[575744973,534197923],"estr":[31919683,34716166]},"Responsabilidades":{"local":[56622478,60420424],"estr":[385358,547880]},"Automóvel":{"local":[71524083,513719814],"estr":[0,0]},"Transportes":{"local":[200383144,209715359],"estr":[837995,173263]},"Riscos Financeiros":{"local":[19830181,18995572],"estr":[0,0]},"Pessoas Coletivo":{"local":[378380924,439945548],"estr":[0,0]},"Rural":{"local":[46073396,114850670],"estr":[13233,166715]},"Marítimos":{"local":[14918580,15477219],"estr":[0,0]},"Aeronáuticos":{"local":[10257946,8830516],"estr":[15857591,15828317]},"Riscos Especiais":{"local":[0,0],"estr":[0,0]},"Habitacional":{"local":[0,0],"estr":[0,0]},"Pessoas Individual":{"local":[0,0],"estr":[282074532,368044833]},"Petróleo":{"local":[0,0],"estr":[0,0]}},"Swiss":{"Patrimonial":{"local":[368707346,495406580],"estr":[406416628,440467444]},"Riscos Especiais":{"local":[6028909,0],"estr":[745565,520518]},"Responsabilidades":{"local":[19702381,9739830],"estr":[20948144,32430271]},"Automóvel":{"local":[48128510,-7898883],"estr":[39381,4613]},"Transportes":{"local":[63255732,94561474],"estr":[98598587,31248823]},"Riscos Financeiros":{"local":[-15951309,2530629],"estr":[85190242,82365854]},"Pessoas Coletivo":{"local":[270656347,247456394],"estr":[42888101,44333530]},"Habitacional":{"local":[3313311,2924386],"estr":[85080,3591]},"Rural":{"local":[92090781,166190916],"estr":[7320376,4865100]},"Marítimos":{"local":[14103877,19417048],"estr":[100912,1354]},"Aeronáuticos":{"local":[37891826,64908069],"estr":[12712476,10117358]},"Petróleo":{"local":[2110956,-2110956],"estr":[8319145,3674745]},"Saúde":{"local":[118522594,275222819],"estr":[0,0]},"Pessoas Individual":{"local":[0,0],"estr":[5812968,15747484]}},"Zurich":{"Patrimonial":{"local":[210566337,247003541],"estr":[303887297,367091428]},"Riscos Especiais":{"local":[2116530,874060],"estr":[1647256,593172]},"Responsabilidades":{"local":[110050058,118305269],"estr":[144761405,146057946]},"Automóvel":{"local":[119528120,76471937],"estr":[480634,551181]},"Transportes":{"local":[6939711,10303693],"estr":[13960330,20140539]},"Riscos Financeiros":{"local":[212560865,274281454],"estr":[0,0]},"Pessoas Coletivo":{"local":[158892,93366],"estr":[14344754,16377405]},"Marítimos":{"local":[7843236,15072577],"estr":[329512,787614]},"Crédito":{"local":[0,0],"estr":[0,0]},"Habitacional":{"local":[0,0],"estr":[107488,154778]},"Rural":{"local":[0,0],"estr":[0,0]},"Pessoas Individual":{"local":[0,0],"estr":[0,1144]},"Aeronáuticos":{"local":[0,0],"estr":[0,0]},"Petróleo":{"local":[0,0],"estr":[14804982,8468927]}},"Chubb":{"Patrimonial":{"local":[108840836,164295091],"estr":[120858727,216058632]},"Responsabilidades":{"local":[140167980,153206469],"estr":[96239473,137347910]},"Transportes":{"local":[114424530,161439145],"estr":[27319224,23539063]},"Riscos Financeiros":{"local":[153540531,163524742],"estr":[103996171,128815406]},"Pessoas Coletivo":{"local":[3679469,4306683],"estr":[3755116,5066069]},"Rural":{"local":[4802,941],"estr":[1603,1411]},"Pessoas Individual":{"local":[0,52795],"estr":[843540,2094421]},"Marítimos":{"local":[4021652,3418152],"estr":[4276785,777357]},"Petróleo":{"local":[239161,-247082],"estr":[2909880,3439225]},"Riscos Especiais":{"local":[0,0],"estr":[535839,0]},"Automóvel":{"local":[0,0],"estr":[0,0]},"Aeronáuticos":{"local":[0,0],"estr":[11203674,11921504]}},"Austral":{"Patrimonial":{"local":[736825549,653424418],"estr":[0,0]},"Riscos Especiais":{"local":[-3597,5205],"estr":[0,0]},"Responsabilidades":{"local":[162281299,136028472],"estr":[0,0]},"Automóvel":{"local":[348702734,359625396],"estr":[0,0]},"Transportes":{"local":[257440876,170543962],"estr":[0,0]},"Riscos Financeiros":{"local":[84666129,115006535],"estr":[0,0]},"Pessoas Coletivo":{"local":[134747724,308637592],"estr":[0,0]},"Habitacional":{"local":[13896740,16048443],"estr":[0,0]},"Rural":{"local":[5778011,3808767],"estr":[0,0]},"Outros":{"local":[1194576,-805437],"estr":[0,0]},"Pessoas Individual":{"local":[25065796,18071533],"estr":[0,0]},"Marítimos":{"local":[15112679,24770082],"estr":[0,0]},"Aeronáuticos":{"local":[106973350,106861979],"estr":[0,0]},"Petróleo":{"local":[50155201,52637061],"estr":[0,0]},"Saúde":{"local":[13,-33658],"estr":[0,0]},"Aceitações do Exterior":{"local":[449988408,481609167],"estr":[0,0]}},"Lloyds":{"Patrimonial":{"local":[0,0],"estr":[562099902,813239012]},"Riscos Especiais":{"local":[0,0],"estr":[47160558,22356114]},"Responsabilidades":{"local":[0,0],"estr":[183997146,182510154]},"Automóvel":{"local":[0,0],"estr":[7986584,9561697]},"Transportes":{"local":[0,0],"estr":[16945450,30799912]},"Riscos Financeiros":{"local":[0,0],"estr":[331121145,502607767]},"Pessoas Coletivo":{"local":[0,0],"estr":[4580397,5881791]},"Habitacional":{"local":[0,0],"estr":[176408,-979]},"Rural":{"local":[0,0],"estr":[91383419,69021733]},"Pessoas Individual":{"local":[0,0],"estr":[0,887338]},"Marítimos":{"local":[0,0],"estr":[23159208,53705113]},"Aeronáuticos":{"local":[0,0],"estr":[158111146,186209541]},"Petróleo":{"local":[0,0],"estr":[202168822,197436456]}},"Talanx/HDI":{"Patrimonial":{"local":[0,0],"estr":[35656046,99121270]},"Riscos Especiais":{"local":[0,0],"estr":[608380,0]},"Responsabilidades":{"local":[0,0],"estr":[3878410,7586977]},"Automóvel":{"local":[0,0],"estr":[0,13644481]},"Transportes":{"local":[0,0],"estr":[142381,2529431]},"Habitacional":{"local":[0,0],"estr":[0,1907294]},"Rural":{"local":[0,0],"estr":[0,18714563]},"Marítimos":{"local":[0,0],"estr":[0,44098]},"Aeronáuticos":{"local":[0,0],"estr":[0,-9887]},"Petróleo":{"local":[0,0],"estr":[3130534,336672]}},"Everest":{"Patrimonial":{"local":[0,0],"estr":[437151292,406575374]},"Riscos Especiais":{"local":[0,0],"estr":[22837,-72739]},"Responsabilidades":{"local":[0,0],"estr":[64308350,51911094]},"Automóvel":{"local":[0,0],"estr":[26515,2594813]},"Transportes":{"local":[0,0],"estr":[27290179,25877350]},"Riscos Financeiros":{"local":[0,0],"estr":[308569358,394174795]},"Pessoas Coletivo":{"local":[0,0],"estr":[703,1047]},"Habitacional":{"local":[0,0],"estr":[3130,928465]},"Rural":{"local":[0,0],"estr":[34748999,46736522]},"Pessoas Individual":{"local":[0,0],"estr":[0,2]},"Marítimos":{"local":[0,0],"estr":[4071588,3214702]},"Aeronáuticos":{"local":[0,0],"estr":[1717536,1709292]},"Petróleo":{"local":[0,0],"estr":[89039,133926]}}}};
-var consol=D.consol,split=D.split,empresas=Object.keys(consol);
+// ============ DATA ============
+var D_GANHO = {consol:{"Allianz":{"Patrimonial":[494339037,616869678],"Riscos Especiais":[18893456,23096121],"Responsabilidades":[140369992,122787735],"Automóvel":[1702594097,2888857431],"Transportes":[127467390,213181539],"Riscos Financeiros":[178525102,172965232],"Pessoas Coletivo":[18601542,20294254],"Rural":[79099073,89125340],"Pessoas Individual":[15334384,22458698],"Marítimos":[46964027,37137495],"Aeronáuticos":[37284625,69273824],"Habitacional":[0,316065],"Petróleo":[40150604,39978942]},"Mapfre":{"Patrimonial":[1502478837,1668187359],"Responsabilidades":[52210755,40272236],"Automóvel":[11983693,10927209],"Transportes":[46805398,52349577],"Riscos Financeiros":[36357959,44566297],"Pessoas Coletivo":[67110524,55757256],"Habitacional":[20474123,22322843],"Rural":[678629964,432990873],"Pessoas Individual":[69397370,109023087],"Marítimos":[49068610,48009773],"Aeronáuticos":[303110926,315570848],"Petróleo":[95289693,127581800],"Riscos Especiais":[4871389,0]},"Munich":{"Patrimonial":[607664656,568914089],"Responsabilidades":[57007836,60968304],"Automóvel":[71524083,513719814],"Transportes":[201221139,209888622],"Riscos Financeiros":[19830181,18995572],"Pessoas Coletivo":[378380924,439945548],"Rural":[46086629,115017385],"Marítimos":[14918580,15477219],"Aeronáuticos":[26115537,24658833],"Riscos Especiais":[0,0],"Habitacional":[0,0],"Pessoas Individual":[282074532,368044833],"Petróleo":[0,0]},"Swiss":{"Patrimonial":[775123974,935874024],"Riscos Especiais":[6774474,520518],"Responsabilidades":[40650525,42170101],"Automóvel":[48167891,-7894270],"Transportes":[161854319,125810297],"Riscos Financeiros":[69238933,84896483],"Pessoas Coletivo":[313544448,291789924],"Habitacional":[3398391,2927977],"Rural":[99411157,171056016],"Marítimos":[14204789,19418402],"Aeronáuticos":[50604302,75025427],"Petróleo":[10430101,1563789],"Saúde":[118522594,275222819],"Pessoas Individual":[5812968,15747484]},"Austral":{"Patrimonial":[736825549,653424418],"Riscos Especiais":[-3597,5205],"Responsabilidades":[162281299,136028472],"Automóvel":[348702734,359625396],"Transportes":[257440876,170543962],"Riscos Financeiros":[84666129,115006535],"Pessoas Coletivo":[134747724,308637592],"Habitacional":[13896740,16048443],"Rural":[5778011,3808767],"Outros":[1194576,-805437],"Pessoas Individual":[25065796,18071533],"Marítimos":[15112679,24770082],"Aeronáuticos":[106973350,106861979],"Petróleo":[50155201,52637061],"Saúde":[13,-33658],"Aceitações do Exterior":[449988408,481609167]},"Chubb":{"Patrimonial":[229699563,380353723],"Responsabilidades":[236407453,290554379],"Transportes":[141743754,184978208],"Riscos Financeiros":[257536702,292340148],"Pessoas Coletivo":[7434585,9372752],"Rural":[6405,2352],"Pessoas Individual":[843540,2147216],"Marítimos":[8298437,4195509],"Petróleo":[3149041,3192143],"Riscos Especiais":[535839,0],"Automóvel":[0,0],"Aeronáuticos":[11203674,11921504]},"Zurich":{"Patrimonial":[514453634,614094969],"Riscos Especiais":[3763786,1467232],"Responsabilidades":[254811463,264363215],"Automóvel":[120008754,77023118],"Transportes":[20900041,30444232],"Riscos Financeiros":[212560865,274281454],"Pessoas Coletivo":[14503646,16470771],"Marítimos":[8172748,15860191],"Crédito":[0,0],"Habitacional":[107488,154778],"Rural":[0,0],"Pessoas Individual":[0,1144],"Aeronáuticos":[0,0],"Petróleo":[14804982,8468927]},"Lloyds":{"Patrimonial":[562099902,813239012],"Riscos Especiais":[47160558,22356114],"Responsabilidades":[183997146,182510154],"Automóvel":[7986584,9561697],"Transportes":[16945450,30799912],"Riscos Financeiros":[331121145,502607767],"Pessoas Coletivo":[4580397,5881791],"Habitacional":[176408,-979],"Rural":[91383419,69021733],"Pessoas Individual":[0,887338],"Marítimos":[23159208,53705113],"Aeronáuticos":[158111146,186209541],"Petróleo":[202168822,197436456]},"Talanx/HDI":{"Patrimonial":[35656046,99121270],"Riscos Especiais":[608380,0],"Responsabilidades":[3878410,7586977],"Automóvel":[0,13644481],"Transportes":[142381,2529431],"Habitacional":[0,1907294],"Rural":[0,18714563],"Marítimos":[0,44098],"Aeronáuticos":[0,-9887],"Petróleo":[3130534,336672]},"Everest":{"Patrimonial":[437151292,406575374],"Riscos Especiais":[22837,-72739],"Responsabilidades":[64308350,51911094],"Automóvel":[26515,2594813],"Transportes":[27290179,25877350],"Riscos Financeiros":[308569358,394174795],"Pessoas Coletivo":[703,1047],"Habitacional":[3130,928465],"Rural":[34748999,46736522],"Pessoas Individual":[0,2],"Marítimos":[4071588,3214702],"Aeronáuticos":[1717536,1709292],"Petróleo":[89039,133926]},"IRB":{"Patrimonial":[1986562854,1907108002],"Riscos Especiais":[0,0],"Responsabilidades":[160620335,160353234],"Automóvel":[52932610,70443402],"Transportes":[297209917,293625402],"Riscos Financeiros":[131185987,126330996],"Crédito":[0,0],"Pessoas Coletivo":[250879253,132247339],"Habitacional":[41769019,44785712],"Rural":[476262865,319647418],"Pessoas Individual":[303127826,121734338],"Marítimos":[33381097,52550555],"Aeronáuticos":[20503851,3178995],"Petróleo":[839880967,841123565],"Aceitações do Exterior":[710972542,833317229],"Outros":[12907805,20973666]}},split:{"Allianz":{"Patrimonial":{"local":[339830832,316071014],"estr":[154508205,300798664]},"Riscos Especiais":{"local":[14383496,19418584],"estr":[4509960,3677537]},"Responsabilidades":{"local":[116923802,100480597],"estr":[23446190,22307138]},"Automóvel":{"local":[596716858,880232409],"estr":[1105877239,2008625022]},"Transportes":{"local":[106000474,124261979],"estr":[21466916,88919560]},"Riscos Financeiros":{"local":[178409315,174983536],"estr":[115787,-2018304]},"Pessoas Coletivo":{"local":[13285637,15780395],"estr":[5315905,4513859]},"Rural":{"local":[62874724,66893684],"estr":[16224349,22231656]},"Pessoas Individual":{"local":[13737539,20641781],"estr":[1596845,1816917]},"Marítimos":{"local":[6045054,22321331],"estr":[40918973,14816164]},"Aeronáuticos":{"local":[464630,2027214],"estr":[36819995,67246610]},"Habitacional":{"local":[0,0],"estr":[0,316065]},"Petróleo":{"local":[0,0],"estr":[40150604,39978942]}},"Mapfre":{"Patrimonial":{"local":[906199499,963550097],"estr":[596279338,704637262]},"Responsabilidades":{"local":[28872385,24154431],"estr":[23338370,16117805]},"Automóvel":{"local":[11983693,10927209],"estr":[0,0]},"Transportes":{"local":[45326908,50711046],"estr":[1478490,1638531]},"Riscos Financeiros":{"local":[35587438,44599409],"estr":[770521,-33112]},"Pessoas Coletivo":{"local":[60102204,47363120],"estr":[7008320,8394136]},"Habitacional":{"local":[15483507,16993521],"estr":[4990616,5329322]},"Rural":{"local":[140743058,230433440],"estr":[537886906,202557433]},"Pessoas Individual":{"local":[69301851,109240732],"estr":[95519,-217645]},"Marítimos":{"local":[11119099,15835480],"estr":[37949511,32174293]},"Aeronáuticos":{"local":[113544445,115381156],"estr":[189566481,200189692]},"Petróleo":{"local":[0,4411103],"estr":[95289693,123170697]},"Riscos Especiais":{"local":[0,0],"estr":[4871389,0]}},"Munich":{"Patrimonial":{"local":[575744973,534197923],"estr":[31919683,34716166]},"Responsabilidades":{"local":[56622478,60420424],"estr":[385358,547880]},"Automóvel":{"local":[71524083,513719814],"estr":[0,0]},"Transportes":{"local":[200383144,209715359],"estr":[837995,173263]},"Riscos Financeiros":{"local":[19830181,18995572],"estr":[0,0]},"Pessoas Coletivo":{"local":[378380924,439945548],"estr":[0,0]},"Rural":{"local":[46073396,114850670],"estr":[13233,166715]},"Marítimos":{"local":[14918580,15477219],"estr":[0,0]},"Aeronáuticos":{"local":[10257946,8830516],"estr":[15857591,15828317]},"Riscos Especiais":{"local":[0,0],"estr":[0,0]},"Habitacional":{"local":[0,0],"estr":[0,0]},"Pessoas Individual":{"local":[0,0],"estr":[282074532,368044833]},"Petróleo":{"local":[0,0],"estr":[0,0]}},"Swiss":{"Patrimonial":{"local":[368707346,495406580],"estr":[406416628,440467444]},"Riscos Especiais":{"local":[6028909,0],"estr":[745565,520518]},"Responsabilidades":{"local":[19702381,9739830],"estr":[20948144,32430271]},"Automóvel":{"local":[48128510,-7898883],"estr":[39381,4613]},"Transportes":{"local":[63255732,94561474],"estr":[98598587,31248823]},"Riscos Financeiros":{"local":[-15951309,2530629],"estr":[85190242,82365854]},"Pessoas Coletivo":{"local":[270656347,247456394],"estr":[42888101,44333530]},"Habitacional":{"local":[3313311,2924386],"estr":[85080,3591]},"Rural":{"local":[92090781,166190916],"estr":[7320376,4865100]},"Marítimos":{"local":[14103877,19417048],"estr":[100912,1354]},"Aeronáuticos":{"local":[37891826,64908069],"estr":[12712476,10117358]},"Petróleo":{"local":[2110956,-2110956],"estr":[8319145,3674745]},"Saúde":{"local":[118522594,275222819],"estr":[0,0]},"Pessoas Individual":{"local":[0,0],"estr":[5812968,15747484]}},"Zurich":{"Patrimonial":{"local":[210566337,247003541],"estr":[303887297,367091428]},"Riscos Especiais":{"local":[2116530,874060],"estr":[1647256,593172]},"Responsabilidades":{"local":[110050058,118305269],"estr":[144761405,146057946]},"Automóvel":{"local":[119528120,76471937],"estr":[480634,551181]},"Transportes":{"local":[6939711,10303693],"estr":[13960330,20140539]},"Riscos Financeiros":{"local":[212560865,274281454],"estr":[0,0]},"Pessoas Coletivo":{"local":[158892,93366],"estr":[14344754,16377405]},"Marítimos":{"local":[7843236,15072577],"estr":[329512,787614]},"Crédito":{"local":[0,0],"estr":[0,0]},"Habitacional":{"local":[0,0],"estr":[107488,154778]},"Rural":{"local":[0,0],"estr":[0,0]},"Pessoas Individual":{"local":[0,0],"estr":[0,1144]},"Aeronáuticos":{"local":[0,0],"estr":[0,0]},"Petróleo":{"local":[0,0],"estr":[14804982,8468927]}},"Chubb":{"Patrimonial":{"local":[108840836,164295091],"estr":[120858727,216058632]},"Responsabilidades":{"local":[140167980,153206469],"estr":[96239473,137347910]},"Transportes":{"local":[114424530,161439145],"estr":[27319224,23539063]},"Riscos Financeiros":{"local":[153540531,163524742],"estr":[103996171,128815406]},"Pessoas Coletivo":{"local":[3679469,4306683],"estr":[3755116,5066069]},"Rural":{"local":[4802,941],"estr":[1603,1411]},"Pessoas Individual":{"local":[0,52795],"estr":[843540,2094421]},"Marítimos":{"local":[4021652,3418152],"estr":[4276785,777357]},"Petróleo":{"local":[239161,-247082],"estr":[2909880,3439225]},"Riscos Especiais":{"local":[0,0],"estr":[535839,0]},"Automóvel":{"local":[0,0],"estr":[0,0]},"Aeronáuticos":{"local":[0,0],"estr":[11203674,11921504]}},"Austral":{"Patrimonial":{"local":[736825549,653424418],"estr":[0,0]},"Riscos Especiais":{"local":[-3597,5205],"estr":[0,0]},"Responsabilidades":{"local":[162281299,136028472],"estr":[0,0]},"Automóvel":{"local":[348702734,359625396],"estr":[0,0]},"Transportes":{"local":[257440876,170543962],"estr":[0,0]},"Riscos Financeiros":{"local":[84666129,115006535],"estr":[0,0]},"Pessoas Coletivo":{"local":[134747724,308637592],"estr":[0,0]},"Habitacional":{"local":[13896740,16048443],"estr":[0,0]},"Rural":{"local":[5778011,3808767],"estr":[0,0]},"Outros":{"local":[1194576,-805437],"estr":[0,0]},"Pessoas Individual":{"local":[25065796,18071533],"estr":[0,0]},"Marítimos":{"local":[15112679,24770082],"estr":[0,0]},"Aeronáuticos":{"local":[106973350,106861979],"estr":[0,0]},"Petróleo":{"local":[50155201,52637061],"estr":[0,0]},"Saúde":{"local":[13,-33658],"estr":[0,0]},"Aceitações do Exterior":{"local":[449988408,481609167],"estr":[0,0]}},"Lloyds":{"Patrimonial":{"local":[0,0],"estr":[562099902,813239012]},"Riscos Especiais":{"local":[0,0],"estr":[47160558,22356114]},"Responsabilidades":{"local":[0,0],"estr":[183997146,182510154]},"Automóvel":{"local":[0,0],"estr":[7986584,9561697]},"Transportes":{"local":[0,0],"estr":[16945450,30799912]},"Riscos Financeiros":{"local":[0,0],"estr":[331121145,502607767]},"Pessoas Coletivo":{"local":[0,0],"estr":[4580397,5881791]},"Habitacional":{"local":[0,0],"estr":[176408,-979]},"Rural":{"local":[0,0],"estr":[91383419,69021733]},"Pessoas Individual":{"local":[0,0],"estr":[0,887338]},"Marítimos":{"local":[0,0],"estr":[23159208,53705113]},"Aeronáuticos":{"local":[0,0],"estr":[158111146,186209541]},"Petróleo":{"local":[0,0],"estr":[202168822,197436456]}},"Talanx/HDI":{"Patrimonial":{"local":[0,0],"estr":[35656046,99121270]},"Riscos Especiais":{"local":[0,0],"estr":[608380,0]},"Responsabilidades":{"local":[0,0],"estr":[3878410,7586977]},"Automóvel":{"local":[0,0],"estr":[0,13644481]},"Transportes":{"local":[0,0],"estr":[142381,2529431]},"Habitacional":{"local":[0,0],"estr":[0,1907294]},"Rural":{"local":[0,0],"estr":[0,18714563]},"Marítimos":{"local":[0,0],"estr":[0,44098]},"Aeronáuticos":{"local":[0,0],"estr":[0,-9887]},"Petróleo":{"local":[0,0],"estr":[3130534,336672]}},"Everest":{"Patrimonial":{"local":[0,0],"estr":[437151292,406575374]},"Riscos Especiais":{"local":[0,0],"estr":[22837,-72739]},"Responsabilidades":{"local":[0,0],"estr":[64308350,51911094]},"Automóvel":{"local":[0,0],"estr":[26515,2594813]},"Transportes":{"local":[0,0],"estr":[27290179,25877350]},"Riscos Financeiros":{"local":[0,0],"estr":[308569358,394174795]},"Pessoas Coletivo":{"local":[0,0],"estr":[703,1047]},"Habitacional":{"local":[0,0],"estr":[3130,928465]},"Rural":{"local":[0,0],"estr":[34748999,46736522]},"Pessoas Individual":{"local":[0,0],"estr":[0,2]},"Marítimos":{"local":[0,0],"estr":[4071588,3214702]},"Aeronáuticos":{"local":[0,0],"estr":[1717536,1709292]},"Petróleo":{"local":[0,0],"estr":[89039,133926]}},"IRB":{"Patrimonial":{"local":[1986562854,1907108002],"estr":[0,0]},"Riscos Especiais":{"local":[0,0],"estr":[0,0]},"Responsabilidades":{"local":[160620335,160353234],"estr":[0,0]},"Automóvel":{"local":[52932610,70443402],"estr":[0,0]},"Transportes":{"local":[297209917,293625402],"estr":[0,0]},"Riscos Financeiros":{"local":[131185987,126330996],"estr":[0,0]},"Crédito":{"local":[0,0],"estr":[0,0]},"Pessoas Coletivo":{"local":[250879253,132247339],"estr":[0,0]},"Habitacional":{"local":[41769019,44785712],"estr":[0,0]},"Rural":{"local":[476262865,319647418],"estr":[0,0]},"Pessoas Individual":{"local":[303127826,121734338],"estr":[0,0]},"Marítimos":{"local":[33381097,52550555],"estr":[0,0]},"Aeronáuticos":{"local":[20503851,3178995],"estr":[0,0]},"Petróleo":{"local":[839880967,841123565],"estr":[0,0]},"Aceitações do Exterior":{"local":[710972542,833317229],"estr":[0,0]},"Outros":{"local":[12907805,20973666],"estr":[0,0]}}}};
+var D_EMITIDO = {consol:{"Allianz":{"Patrimonial":[676531707,553481679],"Riscos Especiais":[18893456,23096121],"Responsabilidades":[163697888,76811233],"Automóvel":[1767557043,3120706452],"Transportes":[138688331,213871605],"Riscos Financeiros":[176263122,173847366],"Pessoas Coletivo":[19993407,18370036],"Rural":[79099073,88796245],"Pessoas Individual":[15334384,31757103],"Marítimos":[44072074,60575141],"Aeronáuticos":[37506556,72001889],"Habitacional":[0,316065],"Petróleo":[40150604,39978942]},"Mapfre":{"Patrimonial":[1511072539,1676914224],"Responsabilidades":[56449443,39218951],"Automóvel":[12362304,10344102],"Transportes":[48426014,54684821],"Riscos Financeiros":[40539419,50628262],"Pessoas Coletivo":[43766662,73752514],"Habitacional":[20358343,23339827],"Rural":[668861546,487728466],"Pessoas Individual":[97615472,133763124],"Marítimos":[46687296,50024482],"Aeronáuticos":[318287007,314657594],"Petróleo":[92494694,126084972],"Riscos Especiais":[4871389,0]},"Munich":{"Patrimonial":[584859283,569572600],"Responsabilidades":[52348228,65035917],"Automóvel":[64572432,777144217],"Transportes":[180696214,200866430],"Riscos Financeiros":[20966250,14969167],"Pessoas Coletivo":[413765204,555846207],"Rural":[-350597119,110877966],"Marítimos":[14844196,12706970],"Aeronáuticos":[22486687,23496090],"Riscos Especiais":[0,0],"Habitacional":[0,0],"Pessoas Individual":[282074532,368044833],"Petróleo":[0,0]},"Swiss":{"Patrimonial":[829560324,1019984414],"Riscos Especiais":[6774474,520518],"Responsabilidades":[42108539,36256661],"Automóvel":[74710162,-37074481],"Transportes":[158726870,145220836],"Riscos Financeiros":[56988232,79215282],"Pessoas Coletivo":[306405177,288174618],"Habitacional":[3569034,2965308],"Rural":[113241917,202602473],"Marítimos":[14476310,19362137],"Aeronáuticos":[48986417,77854969],"Petróleo":[13593550,-1599660],"Saúde":[126227673,304478715],"Pessoas Individual":[5812968,15747484]},"Austral":{"Patrimonial":[815579050,586763148],"Riscos Especiais":[-1827,4367],"Responsabilidades":[174865360,56248930],"Automóvel":[346682225,354609867],"Transportes":[312535928,134298594],"Riscos Financeiros":[105420503,149116228],"Pessoas Coletivo":[159946203,380568574],"Habitacional":[14455929,17166759],"Rural":[3773599,2103738],"Outros":[954856,-834171],"Pessoas Individual":[24111360,14298316],"Marítimos":[15544327,26327098],"Aeronáuticos":[113414952,113672253],"Petróleo":[63702456,55798088],"Saúde":[15,-53459],"Aceitações do Exterior":[559030354,518088550]},"Chubb":{"Patrimonial":[248905197,420506742],"Responsabilidades":[244200578,287368296],"Transportes":[157003535,213753882],"Riscos Financeiros":[237032231,355127569],"Pessoas Coletivo":[4609113,9558500],"Rural":[4653,21],"Pessoas Individual":[843540,2186704],"Marítimos":[7140486,2929901],"Petróleo":[2989059,3176572],"Riscos Especiais":[535839,0],"Automóvel":[0,0],"Aeronáuticos":[11203674,11921504]},"Zurich":{"Patrimonial":[528188383,633840112],"Riscos Especiais":[4955094,644609],"Responsabilidades":[251216347,272908397],"Automóvel":[48865585,67336206],"Transportes":[22109104,32447227],"Riscos Financeiros":[338225355,416036810],"Pessoas Coletivo":[14524974,16442243],"Marítimos":[9541047,17607575],"Crédito":[0,0],"Habitacional":[107488,154778],"Rural":[0,0],"Pessoas Individual":[0,1144],"Aeronáuticos":[0,0],"Petróleo":[14804982,8468927]},"Lloyds":{"Patrimonial":[562099902,813239012],"Riscos Especiais":[47160558,22356114],"Responsabilidades":[183997146,182510154],"Automóvel":[7986584,9561697],"Transportes":[16945450,30799912],"Riscos Financeiros":[331121145,502607767],"Pessoas Coletivo":[4580397,5881791],"Habitacional":[176408,-979],"Rural":[91383419,69021733],"Pessoas Individual":[0,887338],"Marítimos":[23159208,53705113],"Aeronáuticos":[158111146,186209541],"Petróleo":[202168822,197436456]},"Talanx/HDI":{"Patrimonial":[35656046,99121270],"Riscos Especiais":[608380,0],"Responsabilidades":[3878410,7586977],"Automóvel":[0,13644481],"Transportes":[142381,2529431],"Habitacional":[0,1907294],"Rural":[0,18714563],"Marítimos":[0,44098],"Aeronáuticos":[0,-9887],"Petróleo":[3130534,336672]},"Everest":{"Patrimonial":[437151292,406575374],"Riscos Especiais":[22837,-72739],"Responsabilidades":[64308350,51911094],"Automóvel":[26515,2594813],"Transportes":[27290179,25877350],"Riscos Financeiros":[308569358,394174795],"Pessoas Coletivo":[703,1047],"Habitacional":[3130,928465],"Rural":[34748999,46736522],"Pessoas Individual":[0,2],"Marítimos":[4071588,3214702],"Aeronáuticos":[1717536,1709292],"Petróleo":[89039,133926]},"IRB":{"Patrimonial":[2222134644,1931254776],"Riscos Especiais":[0,0],"Responsabilidades":[156825317,169628350],"Automóvel":[51247973,76504050],"Transportes":[338970342,301906754],"Riscos Financeiros":[142077701,110461399],"Crédito":[0,0],"Pessoas Coletivo":[211851915,134948836],"Habitacional":[42720791,47022244],"Rural":[466443795,247620992],"Pessoas Individual":[293116687,123853153],"Marítimos":[28286650,46711712],"Aeronáuticos":[24703458,-12796676],"Petróleo":[908220281,851952085],"Aceitações do Exterior":[753136155,830852591],"Outros":[11629026,28928903]}},split:{"Allianz":{"Patrimonial":{"local":[522023502,252683015],"estr":[154508205,300798664]},"Riscos Especiais":{"local":[14383496,19418584],"estr":[4509960,3677537]},"Responsabilidades":{"local":[140251698,54504095],"estr":[23446190,22307138]},"Automóvel":{"local":[661679804,1112081430],"estr":[1105877239,2008625022]},"Transportes":{"local":[117221415,124952045],"estr":[21466916,88919560]},"Riscos Financeiros":{"local":[176147335,175865670],"estr":[115787,-2018304]},"Pessoas Coletivo":{"local":[14677502,13856177],"estr":[5315905,4513859]},"Rural":{"local":[62874724,66564589],"estr":[16224349,22231656]},"Pessoas Individual":{"local":[13737539,29940186],"estr":[1596845,1816917]},"Marítimos":{"local":[3153101,45758977],"estr":[40918973,14816164]},"Aeronáuticos":{"local":[686561,4755279],"estr":[36819995,67246610]},"Habitacional":{"local":[0,0],"estr":[0,316065]},"Petróleo":{"local":[0,0],"estr":[40150604,39978942]}},"Mapfre":{"Patrimonial":{"local":[914793201,972276962],"estr":[596279338,704637262]},"Responsabilidades":{"local":[33111073,23101146],"estr":[23338370,16117805]},"Automóvel":{"local":[12362304,10344102],"estr":[0,0]},"Transportes":{"local":[46947524,53046290],"estr":[1478490,1638531]},"Riscos Financeiros":{"local":[39768898,50661374],"estr":[770521,-33112]},"Pessoas Coletivo":{"local":[36758342,65358378],"estr":[7008320,8394136]},"Habitacional":{"local":[15367727,18010505],"estr":[4990616,5329322]},"Rural":{"local":[130974640,285171033],"estr":[537886906,202557433]},"Pessoas Individual":{"local":[97519953,133980769],"estr":[95519,-217645]},"Marítimos":{"local":[8737785,17850189],"estr":[37949511,32174293]},"Aeronáuticos":{"local":[128720526,114467902],"estr":[189566481,200189692]},"Petróleo":{"local":[-2794999,2914275],"estr":[95289693,123170697]},"Riscos Especiais":{"local":[0,0],"estr":[4871389,0]}},"Munich":{"Patrimonial":{"local":[552939600,534856434],"estr":[31919683,34716166]},"Responsabilidades":{"local":[51962870,64488037],"estr":[385358,547880]},"Automóvel":{"local":[64572432,777144217],"estr":[0,0]},"Transportes":{"local":[179858219,200693167],"estr":[837995,173263]},"Riscos Financeiros":{"local":[20966250,14969167],"estr":[0,0]},"Pessoas Coletivo":{"local":[413765204,555846207],"estr":[0,0]},"Rural":{"local":[-350610352,110711251],"estr":[13233,166715]},"Marítimos":{"local":[14844196,12706970],"estr":[0,0]},"Aeronáuticos":{"local":[6629096,7667773],"estr":[15857591,15828317]},"Riscos Especiais":{"local":[0,0],"estr":[0,0]},"Habitacional":{"local":[0,0],"estr":[0,0]},"Pessoas Individual":{"local":[0,0],"estr":[282074532,368044833]},"Petróleo":{"local":[0,0],"estr":[0,0]}},"Swiss":{"Patrimonial":{"local":[423143696,579516970],"estr":[406416628,440467444]},"Riscos Especiais":{"local":[6028909,0],"estr":[745565,520518]},"Responsabilidades":{"local":[21160395,3826390],"estr":[20948144,32430271]},"Automóvel":{"local":[74670781,-37079094],"estr":[39381,4613]},"Transportes":{"local":[60128283,113972013],"estr":[98598587,31248823]},"Riscos Financeiros":{"local":[-28202010,-3150572],"estr":[85190242,82365854]},"Pessoas Coletivo":{"local":[263517076,243841088],"estr":[42888101,44333530]},"Habitacional":{"local":[3483954,2961717],"estr":[85080,3591]},"Rural":{"local":[105921541,197737373],"estr":[7320376,4865100]},"Marítimos":{"local":[14375398,19360783],"estr":[100912,1354]},"Aeronáuticos":{"local":[36273941,67737611],"estr":[12712476,10117358]},"Petróleo":{"local":[5274405,-5274405],"estr":[8319145,3674745]},"Saúde":{"local":[126227673,304478715],"estr":[0,0]},"Pessoas Individual":{"local":[0,0],"estr":[5812968,15747484]}},"Zurich":{"Patrimonial":{"local":[224301086,266748684],"estr":[303887297,367091428]},"Riscos Especiais":{"local":[3307838,51437],"estr":[1647256,593172]},"Responsabilidades":{"local":[106454942,126850451],"estr":[144761405,146057946]},"Automóvel":{"local":[48384951,66785025],"estr":[480634,551181]},"Transportes":{"local":[8148774,12306688],"estr":[13960330,20140539]},"Riscos Financeiros":{"local":[338225355,416036810],"estr":[0,0]},"Pessoas Coletivo":{"local":[180220,64838],"estr":[14344754,16377405]},"Marítimos":{"local":[9211535,16819961],"estr":[329512,787614]},"Crédito":{"local":[0,0],"estr":[0,0]},"Habitacional":{"local":[0,0],"estr":[107488,154778]},"Rural":{"local":[0,0],"estr":[0,0]},"Pessoas Individual":{"local":[0,0],"estr":[0,1144]},"Aeronáuticos":{"local":[0,0],"estr":[0,0]},"Petróleo":{"local":[0,0],"estr":[14804982,8468927]}},"Chubb":{"Patrimonial":{"local":[128046470,204448110],"estr":[120858727,216058632]},"Responsabilidades":{"local":[147961105,150020386],"estr":[96239473,137347910]},"Transportes":{"local":[129684311,190214819],"estr":[27319224,23539063]},"Riscos Financeiros":{"local":[133036060,226312163],"estr":[103996171,128815406]},"Pessoas Coletivo":{"local":[853997,4492431],"estr":[3755116,5066069]},"Rural":{"local":[3050,-1390],"estr":[1603,1411]},"Pessoas Individual":{"local":[0,92283],"estr":[843540,2094421]},"Marítimos":{"local":[2863701,2152544],"estr":[4276785,777357]},"Petróleo":{"local":[79179,-262653],"estr":[2909880,3439225]},"Riscos Especiais":{"local":[0,0],"estr":[535839,0]},"Automóvel":{"local":[0,0],"estr":[0,0]},"Aeronáuticos":{"local":[0,0],"estr":[11203674,11921504]}},"Austral":{"Patrimonial":{"local":[815579050,586763148],"estr":[0,0]},"Riscos Especiais":{"local":[-1827,4367],"estr":[0,0]},"Responsabilidades":{"local":[174865360,56248930],"estr":[0,0]},"Automóvel":{"local":[346682225,354609867],"estr":[0,0]},"Transportes":{"local":[312535928,134298594],"estr":[0,0]},"Riscos Financeiros":{"local":[105420503,149116228],"estr":[0,0]},"Pessoas Coletivo":{"local":[159946203,380568574],"estr":[0,0]},"Habitacional":{"local":[14455929,17166759],"estr":[0,0]},"Rural":{"local":[3773599,2103738],"estr":[0,0]},"Outros":{"local":[954856,-834171],"estr":[0,0]},"Pessoas Individual":{"local":[24111360,14298316],"estr":[0,0]},"Marítimos":{"local":[15544327,26327098],"estr":[0,0]},"Aeronáuticos":{"local":[113414952,113672253],"estr":[0,0]},"Petróleo":{"local":[63702456,55798088],"estr":[0,0]},"Saúde":{"local":[15,-53459],"estr":[0,0]},"Aceitações do Exterior":{"local":[559030354,518088550],"estr":[0,0]}},"Lloyds":{"Patrimonial":{"local":[0,0],"estr":[562099902,813239012]},"Riscos Especiais":{"local":[0,0],"estr":[47160558,22356114]},"Responsabilidades":{"local":[0,0],"estr":[183997146,182510154]},"Automóvel":{"local":[0,0],"estr":[7986584,9561697]},"Transportes":{"local":[0,0],"estr":[16945450,30799912]},"Riscos Financeiros":{"local":[0,0],"estr":[331121145,502607767]},"Pessoas Coletivo":{"local":[0,0],"estr":[4580397,5881791]},"Habitacional":{"local":[0,0],"estr":[176408,-979]},"Rural":{"local":[0,0],"estr":[91383419,69021733]},"Pessoas Individual":{"local":[0,0],"estr":[0,887338]},"Marítimos":{"local":[0,0],"estr":[23159208,53705113]},"Aeronáuticos":{"local":[0,0],"estr":[158111146,186209541]},"Petróleo":{"local":[0,0],"estr":[202168822,197436456]}},"Talanx/HDI":{"Patrimonial":{"local":[0,0],"estr":[35656046,99121270]},"Riscos Especiais":{"local":[0,0],"estr":[608380,0]},"Responsabilidades":{"local":[0,0],"estr":[3878410,7586977]},"Automóvel":{"local":[0,0],"estr":[0,13644481]},"Transportes":{"local":[0,0],"estr":[142381,2529431]},"Habitacional":{"local":[0,0],"estr":[0,1907294]},"Rural":{"local":[0,0],"estr":[0,18714563]},"Marítimos":{"local":[0,0],"estr":[0,44098]},"Aeronáuticos":{"local":[0,0],"estr":[0,-9887]},"Petróleo":{"local":[0,0],"estr":[3130534,336672]}},"Everest":{"Patrimonial":{"local":[0,0],"estr":[437151292,406575374]},"Riscos Especiais":{"local":[0,0],"estr":[22837,-72739]},"Responsabilidades":{"local":[0,0],"estr":[64308350,51911094]},"Automóvel":{"local":[0,0],"estr":[26515,2594813]},"Transportes":{"local":[0,0],"estr":[27290179,25877350]},"Riscos Financeiros":{"local":[0,0],"estr":[308569358,394174795]},"Pessoas Coletivo":{"local":[0,0],"estr":[703,1047]},"Habitacional":{"local":[0,0],"estr":[3130,928465]},"Rural":{"local":[0,0],"estr":[34748999,46736522]},"Pessoas Individual":{"local":[0,0],"estr":[0,2]},"Marítimos":{"local":[0,0],"estr":[4071588,3214702]},"Aeronáuticos":{"local":[0,0],"estr":[1717536,1709292]},"Petróleo":{"local":[0,0],"estr":[89039,133926]}},"IRB":{"Patrimonial":{"local":[2222134644,1931254776],"estr":[0,0]},"Riscos Especiais":{"local":[0,0],"estr":[0,0]},"Responsabilidades":{"local":[156825317,169628350],"estr":[0,0]},"Automóvel":{"local":[51247973,76504050],"estr":[0,0]},"Transportes":{"local":[338970342,301906754],"estr":[0,0]},"Riscos Financeiros":{"local":[142077701,110461399],"estr":[0,0]},"Crédito":{"local":[0,0],"estr":[0,0]},"Pessoas Coletivo":{"local":[211851915,134948836],"estr":[0,0]},"Habitacional":{"local":[42720791,47022244],"estr":[0,0]},"Rural":{"local":[466443795,247620992],"estr":[0,0]},"Pessoas Individual":{"local":[293116687,123853153],"estr":[0,0]},"Marítimos":{"local":[28286650,46711712],"estr":[0,0]},"Aeronáuticos":{"local":[24703458,-12796676],"estr":[0,0]},"Petróleo":{"local":[908220281,851952085],"estr":[0,0]},"Aceitações do Exterior":{"local":[753136155,830852591],"estr":[0,0]},"Outros":{"local":[11629026,28928903],"estr":[0,0]}}}};
+var REVISION_2025 = [
+  {rank:1, varRank:'+2', name:'Allianz', tipo:'Local', premio:4746, varPremio:1761, varPct:59.0, ms:13.1, msVar:3.7, msAcc:13.1},
+  {rank:2, varRank:'-1', name:'IRB', tipo:'Local', premio:4287, varPremio:-1031, varPct:-19.4, ms:11.8, msVar:-4.8, msAcc:24.9},
+  {rank:3, varRank:'-1', name:'Mapfre', tipo:'Local', premio:3224, varPremio:289, varPct:9.8, ms:8.9, msVar:-0.9, msAcc:33.8},
+  {rank:4, varRank:'+1', name:'Munich', tipo:'Local', premio:2862, varPremio:1156, varPct:67.8, ms:7.9, msVar:1.1, msAcc:41.7},
+  {rank:5, varRank:'+1', name:'Swiss', tipo:'Local', premio:2340, varPremio:638, varPct:37.5, ms:6.4, msVar:0.6, msAcc:48.1},
+  {rank:6, varRank:'-2', name:'Austral', tipo:'Local', premio:2278, varPremio:-115, varPct:-4.8, ms:6.3, msVar:-0.6, msAcc:54.4},
+  {rank:7, varRank:'—', name:"Lloyd's", tipo:'Admitida', premio:2180, varPremio:588, varPct:36.9, ms:6.0, msVar:1.1, msAcc:60.4},
+  {rank:8, varRank:'+1', name:'Zurich', tipo:'Local', premio:1588, varPremio:432, varPct:37.4, ms:4.4, msVar:0.2, msAcc:64.8},
+  {rank:9, varRank:'+1', name:'Chubb', tipo:'Local', premio:1318, varPremio:434, varPct:49.0, ms:3.6, msVar:0.6, msAcc:68.4},
+  {rank:10, varRank:'-2', name:'Talanx', tipo:'Admitida', premio:1287, varPremio:-23, varPct:-1.8, ms:3.5, msVar:-0.5, msAcc:72.0},
+  {rank:11, varRank:'—', name:'Everest', tipo:'Admitida', premio:981, varPremio:146, varPct:17.4, ms:2.7, msVar:0.1, msAcc:74.7},
+  {rank:12, varRank:'—', name:'Scor', tipo:'Local', premio:876, varPremio:186, varPct:27.0, ms:2.4, msVar:-0.4, msAcc:77.1},
+  {rank:13, varRank:'+2', name:'AIG', tipo:'Local', premio:820, varPremio:184, varPct:28.9, ms:2.3, msVar:0.0, msAcc:79.3},
+  {rank:14, varRank:'+4', name:'Axa XL', tipo:'Local', premio:806, varPremio:464, varPct:135.8, ms:2.2, msVar:1.1, msAcc:81.5},
+  {rank:15, varRank:'+2', name:'Junto', tipo:'Local', premio:770, varPremio:385, varPct:99.8, ms:2.1, msVar:0.2, msAcc:83.7},
+  {rank:16, varRank:'-3', name:'Starr', tipo:'Admitida', premio:634, varPremio:-22, varPct:-3.3, ms:1.7, msVar:-0.3, msAcc:85.4},
+  {rank:17, varRank:'-3', name:'Mitsui', tipo:'Admitida', premio:526, varPremio:-120, varPct:-18.6, ms:1.4, msVar:-0.6, msAcc:86.9}
+];
+// State
+var METRIC = localStorage.getItem('reseg_v10_metric') || 'emitido';
+var SOURCE = localStorage.getItem('reseg_v10_source') || 'revision';
+// ============ DASHBOARD HELPERS ============
 function fmt(n){return Math.round(n).toLocaleString("pt-BR");}
 function fmtMM(n){return (n/1e6).toLocaleString("pt-BR",{maximumFractionDigits:0});}
+function fmtMMrev(n){
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  var sign = n < 0 ? '-' : '';
+  return sign + Math.abs(n).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+function fmtMMs(n){
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  var v = n/1e6;
+  var sign = v < 0 ? '-' : '';
+  return sign + Math.abs(v).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
 function pctNum(a,b){return a===0?(b===0?0:(b>0?Infinity:-Infinity)):((b-a)/Math.abs(a))*100;}
 function pctStr(p){return p===Infinity?"novo":(p===-Infinity?"n/a":p.toFixed(1).replace(".",",")+"%");}
+function fmtPct(n){return (n>=0?"+":"") + n.toFixed(1) + "%";}
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");}
-function colorPct(p){return p===Infinity?"#0a7d2c":(typeof p==="number"?(p>0?"#0a7d2c":(p<0?"#c0392b":"#666")):"#666");}
-function tipoOf(g){return ["Lloyds","Talanx/HDI","Everest"].indexOf(g)>=0?"Admitida":(g==="Austral"?"Local":"Grupo (local+estr.)");}
-var agg={};
-empresas.forEach(function(g){
-  var segs=Object.keys(consol[g]).map(function(r){var v=consol[g][r];return {ramo:r,v24:v[0],v25:v[1],d:v[1]-v[0],p:pctNum(v[0],v[1])};}).filter(function(s){return !(s.v24===0&&s.v25===0);});
-  var t24=0,t25=0;segs.forEach(function(s){t24+=s.v24;t25+=s.v25;});
-  agg[g]={segs:segs,t24:t24,t25:t25,d:t25-t24,p:pctNum(t24,t25),tipo:tipoOf(g)};
-});
-var focus=null,sortState={col:"d",dir:-1},splitMode=false,varEstr=true;
-function localEstr(g){var l24=0,l25=0,e24=0,e25=0,s=split[g]||{};for(var r in s){l24+=s[r].local[0];l25+=s[r].local[1];e24+=s[r].estr[0];e25+=s[r].estr[1];}return {l24:l24,l25:l25,e24:e24,e25:e25};}
+function colorPct(p){
+  if (p===Infinity) return "var(--pos)";
+  if (typeof p!=="number") return "var(--neutral)";
+  return p>0?"var(--pos)":(p<0?"var(--neg)":"var(--neutral)");
+}
+function tipoOf(g){
+  if (["Lloyds","Talanx/HDI","Everest"].indexOf(g)>=0) return {label:"Admitida", cls:"tipo-admitida"};
+  if (["Austral","IRB"].indexOf(g)>=0) return {label:"Local", cls:"tipo-local"};
+  return {label:"Grupo", cls:"tipo-grupo"};
+}
+function getActiveD(){ return METRIC === 'ganho' ? D_GANHO : D_EMITIDO; }
+// Live dashboard state
+var consol, split, empresas, agg;
+var focus = null;
+var sortState = {col:"d", dir:-1};
+var splitMode = false;
+var varEstr = true;
+function recomputeAgg(){
+  var D = getActiveD();
+  consol = D.consol;
+  split = D.split;
+  empresas = Object.keys(consol);
+  agg = {};
+  empresas.forEach(function(g){
+    var segs = Object.keys(consol[g]).map(function(r){
+      var v = consol[g][r];
+      return {ramo:r, v24:v[0], v25:v[1], d:v[1]-v[0], p:pctNum(v[0],v[1])};
+    }).filter(function(s){return !(s.v24===0 && s.v25===0);});
+    var t24=0, t25=0;
+    segs.forEach(function(s){t24+=s.v24; t25+=s.v25;});
+    agg[g] = {segs:segs, t24:t24, t25:t25, d:t25-t24, p:pctNum(t24,t25), tipo:tipoOf(g).label};
+  });
+}
+function localEstr(g){
+  var l24=0, l25=0, e24=0, e25=0;
+  var s = split[g] || {};
+  for (var r in s){ l24+=s[r].local[0]; l25+=s[r].local[1]; e24+=s[r].estr[0]; e25+=s[r].estr[1]; }
+  return {l24:l24, l25:l25, e24:e24, e25:e25};
+}
+// ============ RENDERERS ============
 function renderKpis(){
-  var order=empresas.slice().sort(function(a,b){return agg[b].p-agg[a].p;});
-  var html=order.map(function(g){
-    var A=agg[g],ex="",cls="kpi"+(focus===g?" active":"");
-    if(splitMode){
-      var x=localEstr(g),tot=x.l25+x.e25||1;
-      ex="<div class=\"sub\" style=\"margin-top:3px\">Local:<b>"+fmtMM(x.l25)+"</b>("+Math.round(x.l25/tot*100)+"%) Estr.:<b>"+fmtMM(x.e25)+"</b>("+Math.round(x.e25/tot*100)+"%)</div>";
+  var order = empresas.slice().sort(function(a,b){return agg[b].t25 - agg[a].t25;});
+  var html = order.map(function(g){
+    var A = agg[g];
+    var cls = "kpi" + (focus===g ? " active" : "");
+    var ex = "";
+    if (splitMode){
+      var x = localEstr(g);
+      var tot = x.l25 + x.e25 || 1;
+      ex = '<div class="sub" style="margin-top:4px">L:<b>'+fmtMM(x.l25)+'</b> ('+Math.round(x.l25/tot*100)+'%) · E:<b>'+fmtMM(x.e25)+'</b> ('+Math.round(x.e25/tot*100)+'%)</div>';
     }
-    return "<div class=\""+cls+"\" data-g=\""+esc(g)+"\">" +
-      "<div class=\"nm\">"+esc(g)+"</div>" +
-      "<div class=\"tp\">"+esc(A.tipo)+"</div>" +
-      "<div class=\"big\" style=\"color:"+colorPct(A.p)+"\">"+pctStr(A.p)+"</div>" +
-      "<div class=\"sub\">R$ "+fmtMM(A.t24)+" &rarr; "+fmtMM(A.t25)+" MM</div>" +
-      ex+"</div>";
-  }).join("");
-  document.getElementById("kpis").innerHTML=html;
-  var ks=document.querySelectorAll(".kpi");
-  for(var i=0;i<ks.length;i++){ks[i].onclick=function(){focus=(focus===this.dataset.g)?null:this.dataset.g;renderAll();};}
+    return '<div class="'+cls+'" data-g="'+esc(g)+'">'+
+      '<div class="nm">'+esc(g)+'</div>'+
+      '<div class="tp">'+esc(A.tipo)+'</div>'+
+      '<div class="big" style="color:'+colorPct(A.p)+'">'+pctStr(A.p)+'</div>'+
+      '<div class="sub">R$ '+fmtMM(A.t24)+' → '+fmtMM(A.t25)+' MM</div>'+
+      ex+
+      '</div>';
+  }).join('');
+  document.getElementById('kpis').innerHTML = html;
+  var ks = document.querySelectorAll('.kpi');
+  for (var i=0;i<ks.length;i++){
+    ks[i].onclick = function(){
+      focus = (focus===this.dataset.g) ? null : this.dataset.g;
+      renderDash();
+    };
+  }
 }
-function barRow(nm,d,mx){
-  var w=Math.abs(d)/mx*100,pos=d>=0;
-  var bg=pos?"#2e7d32":"#c0392b",tc=pos?"#0a7d2c":"#c0392b";
-  return "<div class=\"bar-row\">" +
-    "<div class=\"bar-lbl\">"+esc(nm)+"</div>" +
-    "<div class=\"bar-track\"><div class=\"seg\" style=\"width:"+w+"%;background:"+bg+";border-radius:3px\"></div></div>" +
-    "<div class=\"bar-val\" style=\"color:"+tc+"\">"+(pos?"+":"")+fmtMM(d)+" MM</div></div>";
+function barRow(nm, d, mx){
+  var w = Math.abs(d)/mx*100;
+  var pos = d>=0;
+  var bg = pos ? "var(--pos)" : "var(--neg)";
+  var tc = pos ? "var(--pos)" : "var(--neg)";
+  return '<div class="bar-row">'+
+    '<div class="bar-lbl">'+esc(nm)+'</div>'+
+    '<div class="bar-track"><div class="seg" style="width:'+w+'%;background:'+bg+';border-radius:3px"></div></div>'+
+    '<div class="bar-val" style="color:'+tc+'">'+(pos?"+":"")+fmtMM(d)+' MM</div></div>';
 }
-function barRowSplit(nm,l,e,mx){
-  var wl=Math.abs(l)/mx*100,we=Math.abs(e)/mx*100;
-  return "<div class=\"bar-row\">" +
-    "<div class=\"bar-lbl\">"+esc(nm)+"</div>" +
-    "<div class=\"bar-track\">" +
-    "<div class=\"seg\" style=\"width:"+wl+"%;background:#2c6fbb;border-radius:3px 0 0 3px\"></div>" +
-    "<div class=\"seg\" style=\"width:"+we+"%;background:#e8883a\"></div>" +
-    "</div>" +
-    "<div class=\"bar-val\">L "+fmtMM(l)+" E "+fmtMM(e)+"</div></div>";
+function barRowSplit(nm, l, e, mx){
+  var wl = Math.abs(l)/mx*100;
+  var we = Math.abs(e)/mx*100;
+  return '<div class="bar-row">'+
+    '<div class="bar-lbl">'+esc(nm)+'</div>'+
+    '<div class="bar-track">'+
+    '<div class="seg" style="width:'+wl+'%;background:var(--local);border-radius:3px 0 0 3px"></div>'+
+    '<div class="seg" style="width:'+we+'%;background:var(--estr)"></div>'+
+    '</div>'+
+    '<div class="bar-val">L '+fmtMM(l)+' · E '+fmtMM(e)+'</div></div>';
 }
 function renderChart(){
-  var p=document.getElementById("chartPanel");
-  if(!splitMode){
-    var title,rows;
-    if(focus){
-      title="Contribui\u00e7\u00e3o por segmento \u2014 "+focus+" (\u0394 R$ MM)";
-      rows=agg[focus].segs.slice().sort(function(a,b){return b.d-a.d;}).map(function(s){return {nm:s.ramo,d:s.d};});
-    }else{
-      title="Top segmentos por contribui\u00e7\u00e3o (todas) \u2014 \u0394 R$ MM";
-      var bs={};empresas.forEach(function(g){agg[g].segs.forEach(function(s){bs[s.ramo]=(bs[s.ramo]||0)+s.d;});});
-      rows=Object.keys(bs).map(function(r){return {nm:r,d:bs[r]};}).sort(function(a,b){return b.d-a.d;});
+  var p = document.getElementById('chartPanel');
+  if (!splitMode){
+    var title, rows;
+    if (focus){
+      title = "Contribuição por segmento — " + focus + " (Δ R$ MM)";
+      rows = agg[focus].segs.slice().sort(function(a,b){return b.d-a.d;}).map(function(s){return {nm:s.ramo, d:s.d};});
+    } else {
+      title = "Top segmentos por contribuição (todas) — Δ R$ MM";
+      var bs = {};
+      empresas.forEach(function(g){agg[g].segs.forEach(function(s){bs[s.ramo] = (bs[s.ramo]||0) + s.d;});});
+      rows = Object.keys(bs).map(function(r){return {nm:r, d:bs[r]};}).sort(function(a,b){return b.d-a.d;});
     }
-    var mx=Math.max.apply(null,rows.map(function(r){return Math.abs(r.d);}).concat([1]));
-    var h="<h3>"+esc(title)+"</h3>";
-    rows.forEach(function(r){h+=barRow(r.nm,r.d,mx);});
-    p.innerHTML=h;
-  }else{
-    var title2,rows2;
-    if(focus){
-      title2="Pr\u00eamio 2025 \u2014 "+focus+": Local vs Estrangeira R$ MM";
-      var sp2=split[focus]||{};
-      rows2=Object.keys(sp2).map(function(r){return {nm:r,l:sp2[r].local[1],e:sp2[r].estr[1]};}).filter(function(r){return r.l+r.e!==0;}).sort(function(a,b){return (b.l+b.e)-(a.l+a.e);});
-    }else{
-      title2="Pr\u00eamio 2025 por empresa: Local vs Estrangeira R$ MM";
-      rows2=empresas.map(function(g){var x=localEstr(g);return {nm:g,l:x.l25,e:x.e25};}).sort(function(a,b){return (b.l+b.e)-(a.l+a.e);});
+    var mx = Math.max.apply(null, rows.map(function(r){return Math.abs(r.d);}).concat([1]));
+    var h = '<h3>'+esc(title)+'</h3>';
+    rows.forEach(function(r){h += barRow(r.nm, r.d, mx);});
+    p.innerHTML = h;
+  } else {
+    var title2, rows2;
+    if (focus){
+      title2 = "Prêmio 2025 — " + focus + ": Local vs Estrangeira (R$ MM)";
+      var sp2 = split[focus] || {};
+      rows2 = Object.keys(sp2).map(function(r){return {nm:r, l:sp2[r].local[1], e:sp2[r].estr[1]};}).filter(function(r){return r.l+r.e!==0;}).sort(function(a,b){return (b.l+b.e)-(a.l+a.e);});
+    } else {
+      title2 = "Prêmio 2025 por empresa: Local vs Estrangeira (R$ MM)";
+      rows2 = empresas.map(function(g){var x=localEstr(g); return {nm:g, l:x.l25, e:x.e25};}).sort(function(a,b){return (b.l+b.e)-(a.l+a.e);});
     }
-    var mx2=Math.max.apply(null,rows2.map(function(r){return Math.abs(r.l)+Math.abs(r.e);}).concat([1]));
-    var h2="<h3>"+esc(title2)+"</h3>";
-    rows2.forEach(function(r){h2+=barRowSplit(r.nm,r.l,r.e,mx2);});
-    p.innerHTML=h2;
+    var mx2 = Math.max.apply(null, rows2.map(function(r){return Math.abs(r.l)+Math.abs(r.e);}).concat([1]));
+    var h2 = '<h3>'+esc(title2)+'</h3>';
+    rows2.forEach(function(r){h2 += barRowSplit(r.nm, r.l, r.e, mx2);});
+    p.innerHTML = h2;
   }
 }
 function renderVarChart(){
-  var rows,title;
-  if(focus){
-    var sp=split[focus]||{};
-    rows=agg[focus].segs.map(function(s){
-      var r2=sp[s.ramo]||{local:[0,0],estr:[0,0]};
-      return {nm:s.ramo,d:varEstr?s.d:(r2.local[1]-r2.local[0])};
+  var rows, title;
+  if (focus){
+    var sp = split[focus] || {};
+    rows = agg[focus].segs.map(function(s){
+      var r2 = sp[s.ramo] || {local:[0,0], estr:[0,0]};
+      return {nm:s.ramo, d: varEstr ? s.d : (r2.local[1]-r2.local[0])};
     }).filter(function(r){return r.d!==0;}).sort(function(a,b){return b.d-a.d;});
-    title="\u0394 Pr\u00eamio 2025 vs 2024 "+(varEstr?"(Total)":"(s\u00f3 Local)")+" \u2014 "+focus;
-  }else{
-    rows=empresas.map(function(g){
-      var x=localEstr(g);
-      return {nm:g,d:varEstr?agg[g].d:(x.l25-x.l24)};
+    title = "Δ Prêmio 2025 vs 2024 " + (varEstr ? "(Total)" : "(só Local)") + " — " + focus;
+  } else {
+    rows = empresas.map(function(g){
+      var x = localEstr(g);
+      return {nm:g, d: varEstr ? agg[g].d : (x.l25-x.l24)};
     }).sort(function(a,b){return b.d-a.d;});
-    title="\u0394 Pr\u00eamio 2025 vs 2024 "+(varEstr?"(Total)":"(s\u00f3 Local)")+" \u2014 por empresa";
+    title = "Δ Prêmio 2025 vs 2024 " + (varEstr ? "(Total)" : "(só Local)") + " — por empresa";
   }
-  var mx=Math.max.apply(null,rows.map(function(r){return Math.abs(r.d);}).concat([1]));
-  var h="";
-  rows.forEach(function(r){h+=barRow(r.nm,r.d,mx);});
-  document.getElementById("varChart").innerHTML=h;
-  document.getElementById("varTitle").textContent="\uD83D\uDCCA "+title;
+  var mx = Math.max.apply(null, rows.map(function(r){return Math.abs(r.d);}).concat([1]));
+  var h = "";
+  rows.forEach(function(r){h += barRow(r.nm, r.d, mx);});
+  document.getElementById('varChart').innerHTML = h;
+  document.getElementById('varTitle').innerHTML = '📊 ' + esc(title);
 }
 function renderPctChart(){
-  var list=focus?[focus]:empresas;
-  var rows=list.map(function(g){
-    var x=localEstr(g),tot=x.l25+x.e25;
-    var pl=tot>0?Math.round(x.l25/tot*100):0;
-    var pe=tot>0?Math.round(x.e25/tot*100):0;
-    return {nm:g,pl:pl,pe:pe};
+  var list = focus ? [focus] : empresas;
+  var rows = list.map(function(g){
+    var x = localEstr(g);
+    var tot = x.l25 + x.e25;
+    var pl = tot>0 ? Math.round(x.l25/tot*100) : 0;
+    var pe = tot>0 ? Math.round(x.e25/tot*100) : 0;
+    return {nm:g, pl:pl, pe:pe};
   }).sort(function(a,b){return b.pe-a.pe;});
-  var h="";
+  var h = "";
   rows.forEach(function(r){
-    h+="<div class=\"bar-row\">" +
-      "<div class=\"bar-lbl\">"+esc(r.nm)+"</div>" +
-      "<div class=\"pct-track\">" +
-      "<div style=\"width:"+r.pl+"%;background:#2c6fbb;height:22px\"></div>" +
-      "<div style=\"width:"+r.pe+"%;background:#e8883a;height:22px\"></div>" +
-      "</div>" +
-      "<div class=\"pct-val\">" +
-      "<span style=\"color:#2c6fbb;font-weight:bold\">"+r.pl+"% Local</span> &middot; " +
-      "<span style=\"color:#e8883a;font-weight:bold\">"+r.pe+"% Estr.</span>" +
-      "</div></div>";
+    h += '<div class="bar-row">'+
+      '<div class="bar-lbl">'+esc(r.nm)+'</div>'+
+      '<div class="pct-track">'+
+      '<div style="width:'+r.pl+'%;background:var(--local);height:100%"></div>'+
+      '<div style="width:'+r.pe+'%;background:var(--estr);height:100%"></div>'+
+      '</div>'+
+      '<div class="pct-val">'+
+      '<span style="color:var(--local);font-weight:600">'+r.pl+'% Local</span> · '+
+      '<span style="color:var(--estr);font-weight:600">'+r.pe+'% Estr.</span>'+
+      '</div></div>';
   });
-  document.getElementById("pctChart").innerHTML=h;
+  document.getElementById('pctChart').innerHTML = h;
 }
 function renderTables(){
-  var tp=document.getElementById("tablePanel"),list=focus?[focus]:empresas,h="";
+  var tp = document.getElementById('tablePanel');
+  var list = focus ? [focus] : empresas;
+  var h = "";
   list.forEach(function(g){
-    var A=agg[g],sp=split[g]||{},segs=A.segs.slice(),sc=sortState.col,dir=sortState.dir;
+    var A = agg[g];
+    var sp = split[g] || {};
+    var segs = A.segs.slice();
+    var sc = sortState.col, dir = sortState.dir;
     segs.sort(function(a,b){
-      var va,vb,ra=sp[a.ramo]||{local:[0,0],estr:[0,0]},rb=sp[b.ramo]||{local:[0,0],estr:[0,0]};
-      if(sc==="ramo")return dir*a.ramo.localeCompare(b.ramo);
-      if(sc==="v24"){va=a.v24;vb=b.v24;}
-      else if(sc==="v25"){va=a.v25;vb=b.v25;}
-      else if(sc==="l24"){va=ra.local[0];vb=rb.local[0];}
-      else if(sc==="e24"){va=ra.estr[0];vb=rb.estr[0];}
-      else if(sc==="dl"){va=ra.local[1]-ra.local[0];vb=rb.local[1]-rb.local[0];}
-      else if(sc==="de"){va=ra.estr[1]-ra.estr[0];vb=rb.estr[1]-rb.estr[0];}
-      else if(sc==="p"){va=a.p;vb=b.p;}
-      else{va=a.d;vb=b.d;}
-      va=va===Infinity?1e15:(va===-Infinity?-1e15:va);
-      vb=vb===Infinity?1e15:(vb===-Infinity?-1e15:vb);
-      return dir*(va-vb);
+      var va, vb;
+      var ra = sp[a.ramo] || {local:[0,0], estr:[0,0]};
+      var rb = sp[b.ramo] || {local:[0,0], estr:[0,0]};
+      if (sc==="ramo") return dir * a.ramo.localeCompare(b.ramo);
+      if (sc==="v24"){va=a.v24; vb=b.v24;}
+      else if (sc==="v25"){va=a.v25; vb=b.v25;}
+      else if (sc==="l24"){va=ra.local[0]; vb=rb.local[0];}
+      else if (sc==="e24"){va=ra.estr[0]; vb=rb.estr[0];}
+      else if (sc==="dl"){va=ra.local[1]-ra.local[0]; vb=rb.local[1]-rb.local[0];}
+      else if (sc==="de"){va=ra.estr[1]-ra.estr[0]; vb=rb.estr[1]-rb.estr[0];}
+      else if (sc==="p"){va=a.p; vb=b.p;}
+      else {va=a.d; vb=b.d;}
+      va = va===Infinity?1e15:(va===-Infinity?-1e15:va);
+      vb = vb===Infinity?1e15:(vb===-Infinity?-1e15:vb);
+      return dir * (va-vb);
     });
-    function arrow(c){return sortState.col===c?(sortState.dir<0?" \u25bc":" \u25b2"):"";}
+    function arrow(c){return sortState.col===c ? (sortState.dir<0?" ▼":" ▲") : "";}
     function dcell(v){
-      var c=v>0?"#0a7d2c":(v<0?"#c0392b":"#666");
-      return "<td style=\"text-align:right;color:"+c+"\">"+(v>0?"+":"")+fmt(v)+"</td>";
+      var c = v>0 ? "var(--pos)" : (v<0 ? "var(--neg)" : "var(--neutral)");
+      return '<td style="color:'+c+'">'+(v>0?"+":"")+fmt(v)+'</td>';
     }
-    h+="<div class=\"panel\"><h3>"+esc(g)+"<span style=\"font-size:11px;color:#999;font-weight:normal\"> \u2014 "+esc(A.tipo)+" &middot; Total "+fmtMM(A.t24)+"\u2192"+fmtMM(A.t25)+"MM ("+pctStr(A.p)+")</span></h3>";
-    h+="<div style=\"overflow-x:auto\"><table><thead><tr>";
-    h+="<th data-c=\"ramo\">Segmento"+arrow("ramo")+"</th>";
-    h+="<th data-c=\"l24\" style=\"text-align:right\">Local 2024"+arrow("l24")+"</th>";
-    h+="<th data-c=\"e24\" style=\"text-align:right\">Estr. 2024"+arrow("e24")+"</th>";
-    h+="<th style=\"text-align:right\">Local 2025</th>";
-    h+="<th style=\"text-align:right\">Estr. 2025</th>";
-    if(splitMode){
-      h+="<th style=\"text-align:right\">% Estr.</th>";
-    }
-    h+="<th data-c=\"dl\" style=\"text-align:right\">&Delta; Local"+arrow("dl")+"</th>";
-    h+="<th data-c=\"de\" style=\"text-align:right\">&Delta; Estr."+arrow("de")+"</th>";
-    h+="<th data-c=\"v24\" style=\"text-align:right\">Total 2024"+arrow("v24")+"</th>";
-    h+="<th data-c=\"v25\" style=\"text-align:right\">Total 2025"+arrow("v25")+"</th>";
-    h+="<th data-c=\"d\" style=\"text-align:right\">\u0394 R$"+arrow("d")+"</th>";
-    h+="<th data-c=\"p\" style=\"text-align:right\">\u0394 %"+arrow("p")+"</th>";
-    h+="</tr></thead><tbody>";
-    segs.forEach(function(s,i){
-      var r=sp[s.ramo]||{local:[0,0],estr:[0,0]};
-      var bg=i%2?"#f6f9fc":"#fff";
-      var dl=r.local[1]-r.local[0],de=r.estr[1]-r.estr[0];
-      h+="<tr style=\"background:"+bg+"\"><td>"+esc(s.ramo)+"</td>";
-      h+="<td style=\"text-align:right;color:#2c6fbb\">"+fmt(r.local[0])+"</td>";
-      h+="<td style=\"text-align:right;color:#e8883a\">"+fmt(r.estr[0])+"</td>";
-      h+="<td style=\"text-align:right;color:#2c6fbb\">"+fmt(r.local[1])+"</td>";
-      h+="<td style=\"text-align:right;color:#e8883a\">"+fmt(r.estr[1])+"</td>";
-      if(splitMode){
-        var tot2=r.local[1]+r.estr[1]||0,pe2=tot2?Math.round(r.estr[1]/tot2*100)+"%":"-";
-        h+="<td style=\"text-align:right\">"+pe2+"</td>";
+    h += '<div class="panel"><h3>'+esc(g)+'<span style="font-size:11px;color:var(--text-dim);font-weight:400;margin-left:8px">— '+esc(A.tipo)+' · Total '+fmtMM(A.t24)+'→'+fmtMM(A.t25)+'MM ('+pctStr(A.p)+')</span></h3>';
+    h += '<div class="dtable-wrap"><table class="dtable"><thead><tr>';
+    h += '<th data-c="ramo">Segmento'+arrow("ramo")+'</th>';
+    h += '<th data-c="l24">Local 2024'+arrow("l24")+'</th>';
+    h += '<th data-c="e24">Estr. 2024'+arrow("e24")+'</th>';
+    h += '<th>Local 2025</th>';
+    h += '<th>Estr. 2025</th>';
+    if (splitMode) h += '<th>% Estr.</th>';
+    h += '<th data-c="dl">Δ Local'+arrow("dl")+'</th>';
+    h += '<th data-c="de">Δ Estr.'+arrow("de")+'</th>';
+    h += '<th data-c="v24">Total 2024'+arrow("v24")+'</th>';
+    h += '<th data-c="v25">Total 2025'+arrow("v25")+'</th>';
+    h += '<th data-c="d">Δ R$'+arrow("d")+'</th>';
+    h += '<th data-c="p">Δ %'+arrow("p")+'</th>';
+    h += '</tr></thead><tbody>';
+    segs.forEach(function(s, i){
+      var r = sp[s.ramo] || {local:[0,0], estr:[0,0]};
+      var rowCls = i%2 ? 'odd' : '';
+      var dl = r.local[1]-r.local[0];
+      var de = r.estr[1]-r.estr[0];
+      h += '<tr class="'+rowCls+'"><td>'+esc(s.ramo)+'</td>';
+      h += '<td style="color:var(--local)">'+fmt(r.local[0])+'</td>';
+      h += '<td style="color:var(--estr)">'+fmt(r.estr[0])+'</td>';
+      h += '<td style="color:var(--local)">'+fmt(r.local[1])+'</td>';
+      h += '<td style="color:var(--estr)">'+fmt(r.estr[1])+'</td>';
+      if (splitMode){
+        var tot2 = r.local[1]+r.estr[1]||0;
+        var pe2 = tot2 ? Math.round(r.estr[1]/tot2*100)+'%' : '—';
+        h += '<td>'+pe2+'</td>';
       }
-      h+=dcell(dl)+dcell(de);
-      var dcol=s.d>=0?"#0a7d2c":"#c0392b";
-      h+="<td style=\"text-align:right\">"+fmt(s.v24)+"</td>";
-      h+="<td style=\"text-align:right\">"+fmt(s.v25)+"</td>";
-      h+="<td style=\"text-align:right;color:"+dcol+"\">"+(s.d>=0?"+":"")+fmt(s.d)+"</td>";
-      h+="<td style=\"text-align:right;color:"+colorPct(s.p)+"\">"+pctStr(s.p)+"</td></tr>";
+      h += dcell(dl) + dcell(de);
+      var dcol = s.d>=0 ? "var(--pos)" : "var(--neg)";
+      h += '<td>'+fmt(s.v24)+'</td>';
+      h += '<td>'+fmt(s.v25)+'</td>';
+      h += '<td style="color:'+dcol+'">'+(s.d>=0?"+":"")+fmt(s.d)+'</td>';
+      h += '<td style="color:'+colorPct(s.p)+'">'+pctStr(s.p)+'</td></tr>';
     });
-    var l24t=0,e24t=0,l25t=0,e25t=0;
-    for(var rr in sp){l24t+=sp[rr].local[0];e24t+=sp[rr].estr[0];l25t+=sp[rr].local[1];e25t+=sp[rr].estr[1];}
-    var dlt=l25t-l24t,det=e25t-e24t;
-    h+="<tr style=\"background:#dde8f5;font-weight:bold\"><td>TOTAL</td>";
-    h+="<td style=\"text-align:right;color:#2c6fbb\">"+fmt(l24t)+"</td>";
-    h+="<td style=\"text-align:right;color:#e8883a\">"+fmt(e24t)+"</td>";
-    h+="<td style=\"text-align:right;color:#2c6fbb\">"+fmt(l25t)+"</td>";
-    h+="<td style=\"text-align:right;color:#e8883a\">"+fmt(e25t)+"</td>";
-    if(splitMode){
-      var tt2=l25t+e25t||0;
-      h+="<td style=\"text-align:right\">"+(tt2?Math.round(e25t/tt2*100)+"%":"-")+"</td>";
+    var l24t=0, e24t=0, l25t=0, e25t=0;
+    for (var rr in sp){l24t+=sp[rr].local[0]; e24t+=sp[rr].estr[0]; l25t+=sp[rr].local[1]; e25t+=sp[rr].estr[1];}
+    var dlt = l25t-l24t, det = e25t-e24t;
+    h += '<tr class="tot"><td>TOTAL</td>';
+    h += '<td style="color:var(--local)">'+fmt(l24t)+'</td>';
+    h += '<td style="color:var(--estr)">'+fmt(e24t)+'</td>';
+    h += '<td style="color:var(--local)">'+fmt(l25t)+'</td>';
+    h += '<td style="color:var(--estr)">'+fmt(e25t)+'</td>';
+    if (splitMode){
+      var tt2 = l25t+e25t||0;
+      h += '<td>'+(tt2?Math.round(e25t/tt2*100)+'%':'—')+'</td>';
     }
-    var dltc=dlt>=0?"#0a7d2c":"#c0392b",detc=det>=0?"#0a7d2c":"#c0392b";
-    h+="<td style=\"text-align:right;color:"+dltc+"\">"+(dlt>=0?"+":"")+fmt(dlt)+"</td>";
-    h+="<td style=\"text-align:right;color:"+detc+"\">"+(det>=0?"+":"")+fmt(det)+"</td>";
-    var adcol=A.d>=0?"#0a7d2c":"#c0392b";
-    h+="<td style=\"text-align:right\">"+fmt(A.t24)+"</td>";
-    h+="<td style=\"text-align:right\">"+fmt(A.t25)+"</td>";
-    h+="<td style=\"text-align:right;color:"+adcol+"\">"+(A.d>=0?"+":"")+fmt(A.d)+"</td>";
-    h+="<td style=\"text-align:right;color:"+colorPct(A.p)+"\">"+pctStr(A.p)+"</td>";
-    h+="</tr></tbody></table></div></div>";
+    var dltc = dlt>=0?"var(--pos)":"var(--neg)";
+    var detc = det>=0?"var(--pos)":"var(--neg)";
+    h += '<td style="color:'+dltc+'">'+(dlt>=0?"+":"")+fmt(dlt)+'</td>';
+    h += '<td style="color:'+detc+'">'+(det>=0?"+":"")+fmt(det)+'</td>';
+    var adcol = A.d>=0?"var(--pos)":"var(--neg)";
+    h += '<td>'+fmt(A.t24)+'</td>';
+    h += '<td>'+fmt(A.t25)+'</td>';
+    h += '<td style="color:'+adcol+'">'+(A.d>=0?"+":"")+fmt(A.d)+'</td>';
+    h += '<td style="color:'+colorPct(A.p)+'">'+pctStr(A.p)+'</td>';
+    h += '</tr></tbody></table></div></div>';
   });
-  tp.innerHTML=h;
-  var ths=tp.querySelectorAll("th[data-c]");
-  for(var i=0;i<ths.length;i++){ths[i].onclick=function(){var c=this.dataset.c;if(sortState.col===c)sortState.dir*=-1;else{sortState.col=c;sortState.dir=(c==="ramo")?1:-1;}renderTables();};}
+  tp.innerHTML = h;
+  var ths = tp.querySelectorAll('th[data-c]');
+  for (var i=0;i<ths.length;i++){
+    ths[i].onclick = function(){
+      var c = this.dataset.c;
+      if (sortState.col===c) sortState.dir *= -1;
+      else { sortState.col = c; sortState.dir = (c==="ramo") ? 1 : -1; }
+      renderTables();
+    };
+  }
 }
-function renderAll(){
-  document.getElementById("modeLbl").textContent=splitMode?"Local vs Estrangeira":"Total consolidado";
-  document.getElementById("leg").innerHTML=splitMode?"<span class='lg'style='background:#2c6fbb'></span>Local <span class='lg'style='background:#e8883a'></span>Estrangeira":"";
-  renderKpis();renderChart();renderVarChart();renderPctChart();renderTables();
-}
-var head=["grupo","tipo","ramo","local_2024","local_2025","estr_2024","estr_2025","total_2024","total_2025","var_abs","var_pct"];
-function buildRows(){var rows=[];empresas.forEach(function(g){var A=agg[g],sp=split[g]||{};A.segs.slice().sort(function(a,b){return b.d-a.d;}).forEach(function(s){var r=sp[s.ramo]||{local:[0,0],estr:[0,0]};rows.push([g,A.tipo,s.ramo,Math.round(r.local[0]),Math.round(r.local[1]),Math.round(r.estr[0]),Math.round(r.estr[1]),Math.round(s.v24),Math.round(s.v25),Math.round(s.d),pctStr(s.p)]);});});return rows;}
-function tsv(){return [head.join("\t")].concat(buildRows().map(function(r){return r.join("\t");})).join("\n");}
-function csv(){function q(c){c=String(c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':(c);}return [head.map(q).join(",")].concat(buildRows().map(function(r){return r.map(q).join(",");})).join("\n");}
-document.getElementById("copyBtn").onclick=function(){
-  var t=tsv();if(navigator.clipboard)navigator.clipboard.writeText(t).catch(function(){});
-  var ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();
-  try{document.execCommand("copy");}catch(e){}ta.remove();
-  document.getElementById("msg").textContent="✓ Copiado!";
-};
-document.getElementById("csvBtn").onclick=function(){
-  var b=new Blob(["\ufeff"+csv()],{type:"text/csv;charset=utf-8"});
-  var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="resseguro.csv";
-  document.body.appendChild(a);a.click();a.remove();
-  document.getElementById("msg").textContent="CSV gerado.";
-};
-document.getElementById("allBtn").onclick=function(){focus=null;renderAll();};
-document.getElementById("splitBtn").onclick=function(){splitMode=!splitMode;renderAll();};
-document.getElementById("varTogBtn").onclick=function(){
-  varEstr=!varEstr;
-  this.textContent=varEstr?"✔ ON":"OFF";
-  this.className="tgl"+(varEstr?" on":"");
+function renderDash(){
+  document.getElementById('modeLbl').textContent = splitMode ? 'Local vs Estrangeira' : 'Total consolidado';
+  document.getElementById('leg').innerHTML = splitMode ? '<span class="lg" style="background:var(--local)"></span>Local<span class="lg" style="background:var(--estr)"></span>Estrangeira' : '';
+  renderKpis();
+  renderChart();
   renderVarChart();
-};
-renderAll();
+  renderPctChart();
+  renderTables();
+}
+// ============ EXPORTS ============
+var head = ["grupo","tipo","ramo","local_2024","local_2025","estr_2024","estr_2025","total_2024","total_2025","var_abs","var_pct"];
+function buildRows(){
+  var rows = [];
+  empresas.forEach(function(g){
+    var A = agg[g], sp = split[g] || {};
+    A.segs.slice().sort(function(a,b){return b.d-a.d;}).forEach(function(s){
+      var r = sp[s.ramo] || {local:[0,0], estr:[0,0]};
+      rows.push([g, A.tipo, s.ramo, Math.round(r.local[0]), Math.round(r.local[1]), Math.round(r.estr[0]), Math.round(r.estr[1]), Math.round(s.v24), Math.round(s.v25), Math.round(s.d), pctStr(s.p)]);
+    });
+  });
+  return rows;
+}
+function tsv(){return [head.join("\t")].concat(buildRows().map(function(r){return r.join("\t");})).join("\n");}
+function csv(){
+  function q(c){c=String(c); return /[",\n]/.test(c) ? '"'+c.replace(/"/g,'""')+'"' : c;}
+  return [head.map(q).join(",")].concat(buildRows().map(function(r){return r.map(q).join(",");})).join("\n");
+}
+// ============ TOP-LEVEL RENDERERS (Revision + Hero) ============
+function renderRevision(){
+  var rows = REVISION_2025.map(function(r){
+    var isIRB = r.name === 'IRB', isAlz = r.name === 'Allianz';
+    var rowClass = isIRB ? 'irb-row' : (isAlz ? 'alz-row' : '');
+    var nameCellClass = (isIRB || isAlz) ? 'name-cell' : '';
+    var tipoClass = r.tipo==='Local'?'tipo-local':(r.tipo==='Admitida'?'tipo-admitida':'tipo-eventual');
+    var deltaClass = r.varPct>0?'delta-pos':(r.varPct<0?'delta-neg':'delta-neutral');
+    return '<tr class="'+rowClass+'">'+
+      '<td class="rank-num">'+r.rank+'</td>'+
+      '<td class="'+nameCellClass+'">'+r.name+'</td>'+
+      '<td><span class="rank-tipo '+tipoClass+'">'+r.tipo+'</span></td>'+
+      '<td class="right" style="font-variant-numeric:tabular-nums">'+fmtMMrev(r.premio)+'</td>'+
+      '<td class="right '+deltaClass+'" style="font-variant-numeric:tabular-nums">'+fmtPct(r.varPct)+'</td>'+
+      '<td class="right" style="color:var(--text-muted);font-variant-numeric:tabular-nums">'+r.ms.toFixed(1)+'%</td>'+
+    '</tr>';
+  }).join('');
+  document.getElementById('rank-revision-tbody').innerHTML = rows;
+}
+function renderSUSEPRanking(){
+  var label = METRIC==='ganho' ? 'Prêmios Ganhos' : 'Emitido reconstruído';
+  document.getElementById('rank-susep-label').textContent = label;
+  var rows = [];
+  for (var g in consol){
+    var t24=0, t25=0, auto25=0;
+    for (var r in consol[g]){
+      t24 += consol[g][r][0];
+      t25 += consol[g][r][1];
+      if (r === 'Automóvel') auto25 = consol[g][r][1];
+    }
+    rows.push({name:g, t24:t24, t25:t25, exAuto: t25-auto25, tipo:tipoOf(g)});
+  }
+  rows.sort(function(a,b){return b.t25-a.t25;});
+  rows = rows.map(function(r,i){
+    var isIRB = r.name==='IRB', isAlz = r.name==='Allianz';
+    var rowClass = isIRB?'irb-row':(isAlz?'alz-row':'');
+    var nameCellClass = (isIRB||isAlz)?'name-cell':'';
+    var varPct = r.t24!==0 ? (r.t25-r.t24)/r.t24*100 : 0;
+    var deltaClass = varPct>0?'delta-pos':(varPct<0?'delta-neg':'delta-neutral');
+    return '<tr class="'+rowClass+'">'+
+      '<td class="rank-num">'+(i+1)+'</td>'+
+      '<td class="'+nameCellClass+'">'+r.name+'</td>'+
+      '<td><span class="rank-tipo '+r.tipo.cls+'">'+r.tipo.label+'</span></td>'+
+      '<td class="right" style="font-variant-numeric:tabular-nums">'+fmtMMs(r.t25)+'</td>'+
+      '<td class="right '+deltaClass+'" style="font-variant-numeric:tabular-nums">'+fmtPct(varPct)+'</td>'+
+      '<td class="right" style="color:var(--text-muted);font-variant-numeric:tabular-nums">'+fmtMMs(r.exAuto)+'</td>'+
+    '</tr>';
+  }).join('');
+  document.getElementById('rank-susep-tbody').innerHTML = rows;
+}
+function updatePills(){
+  if (SOURCE === 'revision'){
+    document.getElementById('pill-irb').textContent = '4.287';
+    document.getElementById('pill-alz').textContent = '4.746';
+    document.getElementById('pill-gap').textContent = '-459 (Allianz +)';
+    document.getElementById('kpi-1st-name').textContent = 'Allianz';
+    document.getElementById('kpi-1st-detail').textContent = 'R$ 4.746 MM · +59,0% YoY · 13,1% mkt share';
+    document.getElementById('kpi-2nd-name').textContent = 'IRB';
+    document.getElementById('kpi-2nd-detail').textContent = 'R$ 4.287 MM · −19,4% YoY · 11,8% mkt share';
+  } else {
+    var irbT=0, alzT=0;
+    for (var r in consol.IRB) irbT += consol.IRB[r][1];
+    for (var r in consol.Allianz) alzT += consol.Allianz[r][1];
+    document.getElementById('pill-irb').textContent = fmtMMs(irbT);
+    document.getElementById('pill-alz').textContent = fmtMMs(alzT);
+    var gap = irbT - alzT;
+    document.getElementById('pill-gap').textContent = (gap>=0?'+':'')+fmtMMs(gap);
+    var top = irbT>alzT ? {n:'IRB',v:irbT} : {n:'Allianz',v:alzT};
+    var snd = irbT>alzT ? {n:'Allianz',v:alzT} : {n:'IRB',v:irbT};
+    document.getElementById('kpi-1st-name').textContent = top.n;
+    document.getElementById('kpi-1st-detail').textContent = 'R$ '+fmtMMs(top.v)+' MM · '+(METRIC==='ganho'?'Prêmios Ganhos':'Emitido')+' SUSEP-direct';
+    document.getElementById('kpi-2nd-name').textContent = snd.n;
+    document.getElementById('kpi-2nd-detail').textContent = 'R$ '+fmtMMs(snd.v)+' MM · '+(METRIC==='ganho'?'Prêmios Ganhos':'Emitido')+' SUSEP-direct';
+  }
+  // ex-Auto
+  var irbAuto = (consol.IRB['Automóvel']||[0,0])[1];
+  var alzAuto = (consol.Allianz['Automóvel']||[0,0])[1];
+  var irbT=0, alzT=0;
+  for (var r in consol.IRB) irbT += consol.IRB[r][1];
+  for (var r in consol.Allianz) alzT += consol.Allianz[r][1];
+  var irbEx = irbT - irbAuto;
+  var alzEx = alzT - alzAuto;
+  var mult = alzEx>0 ? (irbEx/alzEx) : 0;
+  document.getElementById('kpi-ex-auto').textContent = mult.toFixed(1)+'x';
+  document.getElementById('kpi-ex-auto-detail').textContent = 'IRB R$ '+fmtMMs(irbEx)+' MM vs Allianz R$ '+fmtMMs(alzEx)+' MM ('+(METRIC==='ganho'?'Ganho':'Emitido')+' SUSEP-direct). Sem Auto, IRB segue líder isolado.';
+}
+// ============ TOGGLES ============
+function setMetric(m){
+  METRIC = m;
+  localStorage.setItem('reseg_v10_metric', m);
+  document.getElementById('btn-ganho').classList.toggle('active', m==='ganho');
+  document.getElementById('btn-emitido').classList.toggle('active', m==='emitido');
+  recomputeAgg();
+  renderSUSEPRanking();
+  updatePills();
+  renderDash();
+}
+function setSource(s){
+  SOURCE = s;
+  localStorage.setItem('reseg_v10_source', s);
+  document.getElementById('btn-revision').classList.toggle('active', s==='revision');
+  document.getElementById('btn-susep').classList.toggle('active', s==='susep');
+  document.getElementById('metric-toggle-wrap').style.display = s==='susep' ? 'inline-flex' : 'none';
+  updatePills();
+}
+// ============ INIT ============
+document.addEventListener('DOMContentLoaded', function(){
+  var d = new Date();
+  var months = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
+  var days = ['DOMINGO','SEGUNDA','TERÇA','QUARTA','QUINTA','SEXTA','SÁBADO'];
+  document.getElementById('header-date').textContent = days[d.getDay()]+' '+d.getDate()+' '+months[d.getMonth()]+' · Análise para apresentação';
+  document.getElementById('btn-ganho').classList.toggle('active', METRIC==='ganho');
+  document.getElementById('btn-emitido').classList.toggle('active', METRIC==='emitido');
+  document.getElementById('btn-revision').classList.toggle('active', SOURCE==='revision');
+  document.getElementById('btn-susep').classList.toggle('active', SOURCE==='susep');
+  document.getElementById('metric-toggle-wrap').style.display = SOURCE==='susep' ? 'inline-flex' : 'none';
+  recomputeAgg();
+  renderRevision();
+  renderSUSEPRanking();
+  updatePills();
+  renderDash();
+  // Wire buttons
+  document.getElementById('copyBtn').onclick = function(){
+    var t = tsv();
+    if (navigator.clipboard) navigator.clipboard.writeText(t).catch(function(){});
+    var ta = document.createElement('textarea');
+    ta.value = t; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch(e){}
+    ta.remove();
+    document.getElementById('msg').textContent = '✓ Copiado!';
+  };
+  document.getElementById('csvBtn').onclick = function(){
+    var b = new Blob(['\ufeff'+csv()], {type:'text/csv;charset=utf-8'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(b);
+    a.download = 'resseguro_'+METRIC+'.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    document.getElementById('msg').textContent = 'CSV gerado.';
+  };
+  document.getElementById('allBtn').onclick = function(){focus = null; renderDash();};
+  document.getElementById('splitBtn').onclick = function(){splitMode = !splitMode; renderDash();};
+  document.getElementById('varTogBtn').onclick = function(){
+    varEstr = !varEstr;
+    this.textContent = varEstr ? '✔ ON' : 'OFF';
+    this.className = 'tgl' + (varEstr ? ' on' : '');
+    renderVarChart();
+  };
+});
 </script>
-</body></html>
+</body>
+</html>
